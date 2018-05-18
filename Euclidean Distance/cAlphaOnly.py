@@ -1,7 +1,7 @@
 import csv
 import re
 
-# indicies of elements
+# (CONSTANTS) indices of elements
 COL1 = 0
 ATOMTYPE = 2
 AA = 3
@@ -55,13 +55,11 @@ for r in readers:
                     header.append(int(pos))
             key = chain + "," + pos
             cAlphas[key] = [float(row[X]), float(row[Y]), float(row[Z])]
-    print(cAlphas, flush = True)
 header.sort()
 temp = []
 for element in header:
     temp.append(str(element))
 header = temp
-print("finished retrieving distances")
 
 # calculate distance of all c-alphas
 results = {}
@@ -86,14 +84,12 @@ for base in cAlphas:
         else:
             resultKey = pos2 + "-" + pos1
         d = euclidean3D(cAlphas[base], cAlphas[other])
-        # print("calculated pair " + resultKey + " to be " + str(d), flush = True)
         try:
             oldVal = results[resultKey]
             if d < oldVal:
                 results[resultKey] = d
         except KeyError:
             results[resultKey] = d
-print("finished calculating distances")
 
 # write results to output
 with open("out.csv", "w") as out:
@@ -102,23 +98,17 @@ with open("out.csv", "w") as out:
         out.write(pos + ",")
     out.write("\n")
     # rows
-    print(header)
     for rowPos in header:
-        print("writing row " + rowPos, flush = True)
-        # debug
         out.write(rowPos + ",")
         # pos on a row
         for pos in header:
             if int(pos) <= int(rowPos):
-                if rowPos == 100:
-                    print("skipping empty cells")
                 out.write(",")
             else:
                 key = genKey(rowPos, pos)
                 out.write(str(results[key]))
                 out.write(",")
         out.write("\n")
-print("finished writing")
         
 for f in files:
     f.close()
