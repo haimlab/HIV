@@ -21,6 +21,13 @@ def guardDim(X, Y):
     if len(X) != len(Y):
         raise Exception('dimension mismatch')
 
+class Position:
+    def __init__(self, pos):
+        self.position = int(pos)
+        self.pValues = []
+    def addPValue(self, toAdd):
+        self.pValues.append(int(toAdd))
+
 class Bin:
     def __init__(self, interval):
         if len(interval) != 2:
@@ -48,6 +55,9 @@ class Bin:
             return (self.timePoints[a] + self.timePoints[b]) / 2
         else: # odd length array
             return self.timePoints[length // 2]            
+
+
+
 
 # do linear fit for output file of bin-analysis
 # inputs
@@ -78,4 +88,16 @@ with open(decideBinsFileName, 'r') as binInFile:
 medians = []
 for b in bins:
     medians.append(b.median())
-    
+
+# compute least square fit for all positions
+
+with open(binAnalysisOutFileName, 'r') as binOutFile:
+    reader = csv.reader(binOutFile)
+    firstRow = True
+    for row in reader:
+        if firstRow:
+            firstRow = False
+            continue
+        row = row[pValStart:]
+        
+        
