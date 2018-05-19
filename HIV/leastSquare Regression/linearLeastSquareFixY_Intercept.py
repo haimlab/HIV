@@ -1,6 +1,17 @@
 import csv
 import numpy
 
+# inputs
+binAnalysisOutFileName = ''
+decideBinsFileName = 'decideBins.txt'
+outFileName = ''
+binIntervals = [(1, 61), (62, 200), (201, 670), (671, 4433)] # in order
+threshold = 0.05
+
+# constants
+dt = 1
+pValStart = 1
+
 # perfrom linear least square fit with fixed intercept
 # X: x coordinates of all sample points
 # Y: y coordinates of all sample points
@@ -27,6 +38,19 @@ class Position:
         self.pValues = []
     def addPValue(self, toAdd):
         self.pValues.append(int(toAdd))
+
+class FitData:
+    def __init__(self, medians):
+        self.xData = medians
+        self.yData = []
+    def addData(self, toAdd):
+        self.yData.append(toAdd)
+    def calcFit(self):
+        self.slope = linearFixIntcpLSF(self.xData, self.yData, self.yData[0])
+        self.yIntcpt = yData[0]
+        self.xIntcpt = (threshold - self.yIntcpt) / self.slope
+    def getFitEquation(self):
+        return 'y = ' + str(self.slope) + 'x' + ' + ' + str(self.yIntcpt)
 
 class Bin:
     def __init__(self, interval):
@@ -56,20 +80,7 @@ class Bin:
         else: # odd length array
             return self.timePoints[length // 2]            
 
-
-
-
 # do linear fit for output file of bin-analysis
-# inputs
-binAnalysisOutFileName = ''
-decideBinsFileName = 'decideBins.txt'
-outFileName = ''
-binIntervals = [(1, 61), (62, 200), (201, 670), (671, 4433)] # in order
-
-# constants
-dt = 1
-pValStart = 1
-
 # compute the medians
 dtDict = {}
 bins = []
@@ -89,15 +100,42 @@ medians = []
 for b in bins:
     medians.append(b.median())
 
-# compute least square fit for all positions
-
+# read in data for least square fit for all positions
+allPos = []
+allPosFitData = {}
 with open(binAnalysisOutFileName, 'r') as binOutFile:
     reader = csv.reader(binOutFile)
     firstRow = True
     for row in reader:
-        if firstRow:
+        if firstRow: # get all positions
+            row = row[1:]
+            for p in row:
+                allPos.append(int(p))
+                allPosFitData[int(p)] = FitData(medians)
             firstRow = False
             continue
         row = row[pValStart:]
+        for i in range(0, len(allPos)):
+            allPosFitData[allPos[i]].addData(int(row[i]))
+
+# compute fit parameters for each position
+for key in allPosFitData:
+    allPosFitData[key].calcFit()
+
+# write output
+with open(outFileName, 'w') as outFile, \
+     open(binAnalysisOutFileName, 'r') as oldOutFile:
+    contents = oldOutFile.read()
+    contents = contents.strip()
+    outFile.write(contents + "\n")
+    outFile.write('fit equation,')
+    for key in allPosFitData:
+        outFile.write(allPosFitData[key].getFitEquation() + ',')
+    outFile.write('\n')
+    outFile.write('loose significance at,')
+    for key in allPosFitData:
+        outFile.write(str(allPosFitData[key].xIntcpt) + ',')
+    
+
         
         
