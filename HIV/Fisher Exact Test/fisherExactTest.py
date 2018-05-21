@@ -23,15 +23,21 @@ def bounds(string):
     return val
 
 # parse command line inputs
-parser = argparse.ArgumentParser()
-parser.add_argument('-b', '--bounds', nargs = '+', required = True, type = bounds)
-parser.add_argument('-i', '--inFile', nargs = 1, required = True)
-parser.add_argument('-o', '--outFile', nargs = '?', default = 'output.tab')
-parser.add_argument('-f', '--falseVal', nargs = '?', default = 0.001, type = float)
-try:
-    args = parser.parse_args()
-except:
-    sys.exit('please double check input')
+parser = argparse.ArgumentParser(description = 'bin analysis using Fisher\'s' \
+                                 + ' Exact Test')
+parser.add_argument('-b', '--bounds', nargs = '+', required = True, \
+                    type = bounds, help = 'inclusive upper bounds of all' + \
+                    ' bins, in any order')
+parser.add_argument('-i', '--inFile', nargs = 1, required = True, \
+                    help = 'path to input file, file format should be:\n' + \
+                    'patient, delta t, position 1 dt -, position 1 dt + ' + \
+                    '... position n dt-, position n dt+')
+parser.add_argument('-o', '--outFile', nargs = '?', default = 'output.tab', \
+                    help = 'path to output file')
+parser.add_argument('-f', '--falseVal', nargs = '?', default = 0.001, \
+                    type = float, help = 'value considered a \'false\'' + \
+                    ' for Fisher\'s Exact Test')
+args = parser.parse_args()
 
 # helper method to process bin ranges
 def parseBinRange(bounds):
