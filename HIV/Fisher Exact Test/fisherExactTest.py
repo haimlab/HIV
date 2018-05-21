@@ -1,42 +1,66 @@
-# fisher z-transformation
 import csv
 import os
 import re
+import argparse
+import itertools
+import math
+import sys
 
-# input parameters
-binRanges = [(1, 31), (32, 90), (91, 180), (101, 365), (366, 710), (730, 4845)] # both ends inclusive
-folderPath = '.'
-inFileName = 'testInput2.csv'
-outFileName = 'out.csv'
-falseVal = 0.001
-posNeeded = ["295","332","339","392","386","448","412","413","137", \
-                   "301","327","363","662","663","664","665","666","667", \
-                   "668","669","670","671","672","673","674","675","676", \
-                   "677","678","679","680","681","682","683","156","160", \
-                   "165","167","168","169","170","171","173"]
+# filter positive integers used for bounds
+appearedBounds = []
+def bounds(string):
+    if not string.isdigit():
+        raise argparse.ArgumentTypeError('%s is not an integer' % string)
+    val = int(string) 
+    if val < 1:
+        raise argparse.ArgumentTypeError('%s is not positive' % string)
+    elif val in appearedBounds:
+        raise argparse.ArgumentTypeError('%s is duplicated bound' % string)
+    else: # check spacing between bounds
+        for bound in appearedBounds:
+            if abs(val - bound) < 2:
+                raise argparse.ArgumentTypeError('0-sized bin')
+    return val
+
+# parse command line inputs
+parser = argparse.ArgumentParser()
+parser.add_argument('-b', '--bounds', nargs = '+', required = True, type = bounds)
+parser.add_argument('-i', '--inFile', nargs = 1, required = True)
+parser.add_argument('-o', '--outFile', nargs = '?', default = 'output.tab')
+parser.add_argument('-f', '--falseVal', nargs = '?', default = 0.001, type = float)
+try:
+    args = parser.parse_args()
+except:
+    sys.exit('please double check input')
+
+# helper method to process bin ranges
+def parseBinRange(bounds):
+    bounds.sort()
+    curStart = 0
+    binRanges = []
+    for bound in bounds:
+        binRanges.append((curStart, bound))
+        curStart = bound + 1
+    return binRanges
+
+# get bin ranges
+binRanges = parseBinRange(args.bounds)
 
 # constants
 dt = 1
 posStart = 2
 digitsPattern = re.compile('\d+')
 
-def factorial(n):
-    if type(n) != int:
-        raise Exception('cannot compute factorial on non-integer')
-    if n < 0:
-        raise Exception('cannot compute factorial for negative number')
-    if n == 1 or n == 0:
-        return 1
-    else:
-        return n * factorial(n - 1)
-
+# calculate number of combination pairs
 def nCr(n, r):
     if type(n) != int or type(r) != int:
         raise Exception('cannot compute combination on non-integer')
     elif r > n:
         raise Exception('r must be no larger than n in combination')
-    return factorial(n) / (factorial(r) * factorial(n - r))
+    return math.factorial(n) / (math.factorial(r) * math.factorial(n - r))
 
+# stores values of four quadrants used to calculate fisher exact test for a
+# particular bin
 class Position:
     def __init__(self, position):
         self.position = int(position)
@@ -45,6 +69,7 @@ class Position:
         self.q3 = 0
         self.q4 = 0        
     def add(self, v1, v2): # add a pair of values (A, B) to this bin
+        falseVal = args.falseVal
         if v1 == falseVal and v2 == falseVal:
             self.q4 += 1
         elif v1 == falseVal and v2 != falseVal:
@@ -61,6 +86,8 @@ class Position:
         fisherP = leftNumerator * rightNumerator / denominator
         return fisherP
 
+# represents a bin and all positions. The positions are created by considering
+# only values that fall into this bin.
 class Bin:
     def __init__(self, interval):
         self.start = interval[0] # interval of the bin
@@ -68,20 +95,17 @@ class Bin:
         self.positions = {}
     def intervalContains(self, t):
         return t <= self.end and t >= self.start
-    def toList(self):
+    def toList(self): # turn the bin into a list representation, for csv writer
         myList = []
+        keyList = []
         myList.append(str(self.start) + ' - ' + str(self.end))
-        for pos in posNeeded:
-            pos = int(pos)
+        for pos in allPos:
             myList.append(self.positions[pos].calcFisher())
         return myList
-    def add(self, position, val1, val2):
-        print('adding to positions' + str(position), flush = True)
+    def add(self, position, val1, val2): # add a new value pair to this bin
         try:
-            print('position already exist', flush = True)
             self.positions[position].add(val1, val2)
         except KeyError:
-            print('creating a new position', flush = True)
             newPos = Position(position)
             newPos.add(val1, val2)
             self.positions[position] = newPos
@@ -94,43 +118,38 @@ for binRange in binRanges:
 
 # parse input
 posDict = {}
-inFilePath = os.path.join(folderPath, inFileName)
-inFile = open(inFilePath, 'r')
-reader = csv.reader(inFile)
-isFirstRow = True
-for row in reader:
-    if isFirstRow:
-        for i in range(0, len(row)):
-            try:
-                pos = digitsPattern.match(row[i]).group(0)
-            except AttributeError:
-                continue
-            if pos in posNeeded:
+allPos = []
+with open(args.inFile[0]) as inFile:
+    reader = csv.reader(inFile)
+    isFirstRow = True
+    for row in reader:
+        if isFirstRow:
+            for i in range(0, len(row)):
                 try:
-                    posDict[int(pos)].append(i)
+                    pos = int(digitsPattern.match(row[i]).group(0))
+                except AttributeError:
+                    continue
+                try:
+                    posDict[pos].append(i)
                 except KeyError:
-                    posDict[int(pos)] = [i]
-        isFirstRow = False
-        continue
-    print('checking row with dt: ' + row[dt])
-    for b in bins:
-        if b.intervalContains(int(row[dt])):
-            print('contained in: ' + str(b.start) + ' - ' + str(b.end))
-            for i in posDict:
-                b.add(i, float(row[posDict[i][0]]), float(row[posDict[i][1]]))
-            break
+                    posDict[pos] = [i]
+                if not pos in allPos:
+                    allPos.append(pos)
+            allPos.sort()
+            isFirstRow = False
+            continue
+        for b in bins:
+            if b.intervalContains(int(row[dt])):
+                for i in posDict:
+                    b.add(i, float(row[posDict[i][0]]), float(row[posDict[i][1]]))
+                break
 
 # write output
-outFilePath = os.path.join(folderPath, outFileName)
-outFile = open(outFilePath, 'w')
-writer = csv.writer(outFile, lineterminator = '\n')
-header = ['bins']
-for pos in posNeeded:
-    header.append(str(pos))
-writer.writerow(header)
-for b in bins:
-    writer.writerow(b.toList())
-
-# close files
-inFile.close()
-outFile.close()
+with open(args.outFile, 'w') as outFile:
+    writer = csv.writer(outFile, lineterminator = '\n', delimiter = '\t')
+    header = ['bins']
+    for pos in allPos:
+        header.append(str(pos))
+    writer.writerow(header)
+    for b in bins:
+        writer.writerow(b.toList())
