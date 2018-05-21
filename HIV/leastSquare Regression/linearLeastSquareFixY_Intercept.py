@@ -2,9 +2,9 @@ import csv
 import numpy
 
 # inputs
-binAnalysisOutFileName = ''
-decideBinsFileName = 'decideBins.txt'
-outFileName = ''
+binAnalysisOutFileName = 'C:\\Users\\rdong6\\Desktop\\leastSquareTest\\out consec.csv'
+decideBinsFileName = 'C:\\Users\\rdong6\\Desktop\\leastSquareTest\\decideBins.csv'
+outFileName = 'C:\\Users\\rdong6\\Desktop\\leastSquareTest\\output.csv'
 binIntervals = [(1, 61), (62, 200), (201, 670), (671, 4433)] # in order
 threshold = 0.05
 
@@ -46,9 +46,12 @@ class FitData:
     def addData(self, toAdd):
         self.yData.append(toAdd)
     def calcFit(self):
-        self.slope = linearFixIntcpLSF(self.xData, self.yData, self.yData[0])
-        self.yIntcpt = yData[0]
-        self.xIntcpt = (threshold - self.yIntcpt) / self.slope
+        self.slope = linearFixIntcptLSF(self.xData, self.yData, self.yData[0])
+        self.yIntcpt = self.yData[0]
+        try:
+            self.xIntcpt = (threshold - self.yIntcpt) / self.slope
+        except ZeroDivisionError:
+            self.xIntcpt = 'slope = 0'
     def getFitEquation(self):
         return 'y = ' + str(self.slope) + 'x' + ' + ' + str(self.yIntcpt)
 
@@ -97,7 +100,9 @@ with open(decideBinsFileName, 'r') as binInFile:
         for b in bins:
             b.addDt(t)
 medians = []
+print('medians are:')
 for b in bins:
+    print(str(b.median()))
     medians.append(b.median())
 
 # read in data for least square fit for all positions
@@ -116,7 +121,7 @@ with open(binAnalysisOutFileName, 'r') as binOutFile:
             continue
         row = row[pValStart:]
         for i in range(0, len(allPos)):
-            allPosFitData[allPos[i]].addData(int(row[i]))
+            allPosFitData[allPos[i]].addData(float(row[i]))
 
 # compute fit parameters for each position
 for key in allPosFitData:
