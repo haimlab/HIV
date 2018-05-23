@@ -2,15 +2,49 @@ import csv
 import numpy
 
 # inputs
-binAnalysisOutFileName = 'C:\\Users\\rdong6\\Desktop\\leastSquareTest\\out consec.csv'
-decideBinsFileName = 'C:\\Users\\rdong6\\Desktop\\leastSquareTest\\decideBins.csv'
-outFileName = 'C:\\Users\\rdong6\\Desktop\\leastSquareTest\\output.csv'
+binAnalysisOutFileName = 'U:\\ResearchData\\rdss_hhaim\LAB PROJECTS\\Volatility Forecasting Manuscript\\Trimer Coloring\\eastSquareFitting\\fisher_postClean_consec\\out consec.csv'
+decideBinsFileName = 'U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\Volatility Forecasting Manuscript\Trimer Coloring\\leastSquareFitting\\fisher_postClean_consec\\decideBins.csv'
+outFileName = 'U:\\ResearchData\\rdss_hhaim\LAB PROJECTS\\Volatility Forecasting Manuscript\\Trimer Coloring\\leastSquareFitting\\fisher_postClean_consec\\output.csv'
 binIntervals = [(1, 61), (62, 200), (201, 670), (671, 4433)] # in order
 threshold = 0.05
 
 # constants
 dt = 1
 pValStart = 1
+nonSignificant = 1
+
+# apply rule 1 to given position
+# rule 1: if p-value of the first bin is not significant, then every bin in that
+# position becomes non-significant
+def applyRule1(position):
+    if position.pValues[0] > threshold:
+        for i in range(0, len(position.pValues)):
+            position.pValues[i] = nonSignificant
+
+# apply rule 2 to given position
+# rule 2: if there exists two consecutive p-Values that are both insignificant,
+# all following p-Values also become insignificant
+def applyRule2(position):
+    length = len(position.pValues)
+    pre = position.pValues[0] > threshold
+    for i in range(1, length):
+        cur = position.pValues[i] > threshold
+        if pre and cur:
+            for j in range(i - 1, length):
+                position.pValues[j] = 1
+            break
+        pre = cur
+
+# takes a list of x coordinates, and shift them such that the first point lies 
+# exactly on the origin
+def normalizeToOrigin(myList):
+    if len(myList) == 0:
+        raise Exception('list is empty')
+    myList.sort()
+    shiftDist = myList[0]
+    for i in range(0, len(myList)):
+        myList[i] -= shiftDist
+    
 
 # perfrom linear least square fit with fixed intercept
 # X: x coordinates of all sample points
@@ -100,9 +134,7 @@ with open(decideBinsFileName, 'r') as binInFile:
         for b in bins:
             b.addDt(t)
 medians = []
-print('medians are:')
 for b in bins:
-    print(str(b.median()))
     medians.append(b.median())
 
 # read in data for least square fit for all positions
@@ -140,7 +172,3 @@ with open(outFileName, 'w') as outFile, \
     outFile.write('loose significance at,')
     for key in allPosFitData:
         outFile.write(str(allPosFitData[key].xIntcpt) + ',')
-    
-
-        
-        

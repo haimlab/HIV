@@ -623,21 +623,8 @@ name = names.split(',')
 for nam in name:
     FiveD = False
     weight_scale = 'G' #F for 2F5 or G for 2G12
-    try:
-        #distances = open("U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\\Raghav\\Volatility_Data\\V3 Loop Volatility\\For Volatility- Myside\\Distances\\HCV\\Chronic\\" + nam + '.fas')
-        #distances = open("U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\\Raghav\\Analysis\\New Project\\Genetic Distances\\B_Europe\\" + nam + '.fas');
-        distances = open(
-            "C:\\Users\\kandula.HEALTHCARE\\Desktop\\Temp\\TempForRentian\\Long_2_B_NA1\\" + nam + '.fas');
-
-    except:
-        print(nam)
-        continue
-    #table = open("U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\\Raghav\\Analysis\\Hepatitis C\\Volatility\\Data\\Tab Delimited\\NewPositions\\Chronic.txt")
-    #D file
-    #table = open("U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\\Raghav\\Analysis\\New Project\\Volatility Results\\B_LS_Europe_ForVolatility.txt")
+    distances = open("C:\\Users\\kandula.HEALTHCARE\\Desktop\\Temp\\TempForRentian\\Long_2_B_NA1\\" + nam + '.fas');
     table = open("C:\\Users\\kandula.HEALTHCARE\\Desktop\\Temp\\TempForRentian\\tempFile.txt")
-        #"U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\\Raghav\\Analysis\\New Project\\AllClades_JustSequences\\Glyco Sites_All Clades\\TSV\\UW_Chronic.txt")
-        #"U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\\Raghav\\Analysis\\Env Volatility Forecasting Project\\EVF MS Data and Analyses\\Working Directory\\TSV files_PNGS\\C_Southern_Africa_Chronic.txt
 
     # HyPhy Philips Style Matrix has number of Sequences listed in the first position of output#
     # This code brings the matrix into python#
