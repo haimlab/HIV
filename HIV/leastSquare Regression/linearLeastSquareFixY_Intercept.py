@@ -1,10 +1,13 @@
 import csv
 import numpy
+import math
+
+# TODO stream line application of rules
 
 # inputs
-binAnalysisOutFileName = 'U:\\ResearchData\\rdss_hhaim\LAB PROJECTS\\Volatility Forecasting Manuscript\\Trimer Coloring\\eastSquareFitting\\fisher_postClean_consec\\out consec.csv'
-decideBinsFileName = 'U:\\ResearchData\\rdss_hhaim\\LAB PROJECTS\Volatility Forecasting Manuscript\Trimer Coloring\\leastSquareFitting\\fisher_postClean_consec\\decideBins.csv'
-outFileName = 'U:\\ResearchData\\rdss_hhaim\LAB PROJECTS\\Volatility Forecasting Manuscript\\Trimer Coloring\\leastSquareFitting\\fisher_postClean_consec\\output.csv'
+binAnalysisOutFileName = 'C:\\Users\\rdong6\\Desktop\\least square dev\\out consec.csv'
+decideBinsFileName = 'C:\\Users\\rdong6\\Desktop\\least square dev\\decideBins.csv'
+outFileName = 'C:\\Users\\rdong6\\Desktop\\least square dev\\output.csv'
 binIntervals = [(1, 61), (62, 200), (201, 670), (671, 4433)] # in order
 threshold = 0.05
 
@@ -13,25 +16,28 @@ dt = 1
 pValStart = 1
 nonSignificant = 1
 
-# apply rule 1 to given position
+# apply rule 1 to fit data object
 # rule 1: if p-value of the first bin is not significant, then every bin in that
 # position becomes non-significant
-def applyRule1(position):
-    if position.pValues[0] > threshold:
-        for i in range(0, len(position.pValues)):
-            position.pValues[i] = nonSignificant
+def applyRule1(fitData):
+    if fitData.yData[0] > threshold:
+        length = len(fitData.yData)
+        for i in range(0, length):
+            fitData.yData[i] = nonSignificant
 
-# apply rule 2 to given position
+# apply rule 2 to fit data object
 # rule 2: if there exists two consecutive p-Values that are both insignificant,
 # all following p-Values also become insignificant
-def applyRule2(position):
-    length = len(position.pValues)
-    pre = position.pValues[0] > threshold
+def applyRule2(fitData):
+    length = len(fitData.yData)
+    if length < 2:
+        raise Exception('need at least 2 data points for rule 2')
+    pre = fitData.yData[0] > threshold
     for i in range(1, length):
-        cur = position.pValues[i] > threshold
+        cur = fitData.yData[i] > threshold
         if pre and cur:
             for j in range(i - 1, length):
-                position.pValues[j] = 1
+                fitData.yData[j] = 1
             break
         pre = cur
 
@@ -45,7 +51,6 @@ def normalizeToOrigin(myList):
     for i in range(0, len(myList)):
         myList[i] -= shiftDist
     
-
 # perfrom linear least square fit with fixed intercept
 # X: x coordinates of all sample points
 # Y: y coordinates of all sample points
@@ -66,13 +71,6 @@ def guardDim(X, Y):
     if len(X) != len(Y):
         raise Exception('dimension mismatch')
 
-class Position:
-    def __init__(self, pos):
-        self.position = int(pos)
-        self.pValues = []
-    def addPValue(self, toAdd):
-        self.pValues.append(int(toAdd))
-
 class FitData:
     def __init__(self, medians):
         self.xData = medians
@@ -83,7 +81,7 @@ class FitData:
         self.slope = linearFixIntcptLSF(self.xData, self.yData, self.yData[0])
         self.yIntcpt = self.yData[0]
         try:
-            self.xIntcpt = (threshold - self.yIntcpt) / self.slope
+            self.xIntcpt = (-math.log(threshold, 10) - self.yIntcpt) / self.slope
         except ZeroDivisionError:
             self.xIntcpt = 'slope = 0'
     def getFitEquation(self):
@@ -102,8 +100,6 @@ class Bin:
     def addDt(self, dt):
         dt = int(dt)
         if self.containsDT(dt):
-            print("bin range " + str(self.start) + ' - ' + str(self.end), flush = True)
-            print("appendin " + str(dt))
             self.timePoints.append(dt)
     def median(self):
         length = len(self.timePoints)
@@ -136,6 +132,7 @@ with open(decideBinsFileName, 'r') as binInFile:
 medians = []
 for b in bins:
     medians.append(b.median())
+normalizeToOrigin(medians)
 
 # read in data for least square fit for all positions
 allPos = []
@@ -155,6 +152,18 @@ with open(binAnalysisOutFileName, 'r') as binOutFile:
         for i in range(0, len(allPos)):
             allPosFitData[allPos[i]].addData(float(row[i]))
 
+# apply rule 1 and 2 to all fit data
+for pos in allPos:
+    applyRule1(allPosFitData[pos])
+    applyRule2(allPosFitData[pos])
+
+# correct p values w.r.t 1 using -log_10(p)
+for key in allPosFitData:
+    yData = allPosFitData[key].yData
+    length = len(yData)
+    for i in range(0, length):
+        yData[i] = -math.log(yData[i], 10)
+
 # compute fit parameters for each position
 for key in allPosFitData:
     allPosFitData[key].calcFit()
@@ -162,9 +171,19 @@ for key in allPosFitData:
 # write output
 with open(outFileName, 'w') as outFile, \
      open(binAnalysisOutFileName, 'r') as oldOutFile:
+    # put a copy of input files contents for convinience
     contents = oldOutFile.read()
     contents = contents.strip()
     outFile.write(contents + "\n")
+    # write the medians and fit data after applying rules for convinience
+    outFile.write('bin medians, fit data after applying rules + \n')
+    numBins = len(medians)
+    for i in range(0, numBins):
+        outFile.write(str(medians[i]) + ',')
+        for pos in allPos:
+            outFile.write(str(allPosFitData[pos].yData[i]) + ',')
+        outFile.write('\n')
+    # write the fit results
     outFile.write('fit equation,')
     for key in allPosFitData:
         outFile.write(allPosFitData[key].getFitEquation() + ',')
