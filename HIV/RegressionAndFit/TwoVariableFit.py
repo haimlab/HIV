@@ -6,12 +6,13 @@ import math
 import re
 
 # inputs
-testSetFileName = 'testSet.csv'
+testSetFileName = 'decideBins.txt'
 pValueMatrixFileName = 'matrix.csv'
 outFileName = 'out.csv'
 
 # constants
 THRESHOLD = 0.001
+PATIENT = 0
 DT = 1
 POS_START = 2
 DIGITS_PATTERN = re.compile('\d+')
@@ -22,8 +23,9 @@ ZERO_VAL_STRING = '0.001'
 proxPosDict = {} # <int, [int pos, float dist]>
 
 class TimePoint:
-    def __init__(self, dT):
+    def __init__(self, dT, patient):
         self.dT = dT
+        self.patient = patient
         self.prePos = {}
         self.postPos = {} # <int, float>
         
@@ -59,13 +61,20 @@ def binConvert(myString):
     else:
         return 1
 
+def binConvertNum(num):
+    if num > THRESHOLD:
+        return 1
+    else:
+        return 0
 
 # parse time points and binary convert volatility values
 def parseTimePoints():
     with open(testSetFileName, 'r') as testSetFile:
         isFirstRow = True
         reader = csv.reader(testSetFile)
+        rowCount = 0
         for row in reader:
+            rowCount += 1
             if isFirstRow:
                 posIndices = parsePositionIndex(row)
                 allTimePoints = [] # list of time point object
@@ -73,10 +82,10 @@ def parseTimePoints():
                 continue
             if len(row) == 0:
                 continue
-            timePoint = TimePoint(int(row[DT]))
+            timePoint = TimePoint(int(row[DT]), row[PATIENT])
             for key in posIndices:
-                timePoint.prePos[posIndices[key]] = binConvert(row[key + 1])
-                timePoint.postPos[posIndices[key]] = binConvert(row[key])
+                timePoint.prePos[posIndices[key]] = row[key + 1]
+                timePoint.postPos[posIndices[key]] = row[key]
             if timePoint.dT < TIME_THRESH:
                 allTimePoints.append(timePoint)
     return allTimePoints
@@ -154,7 +163,7 @@ if __name__ == "__main__":
     
     # clear output file and write headers
     with open(outFileName, 'w') as outFile:
-        outFile.write("Position,Temporal Persistance Weight,Spatial Persistance Weight\n")
+        outFile.write("Position,Temporal Persistance Weight,Spatial Persistance Weight, Total #TimePoints, #False Estimates, #Positive Mismatches, #Negative Mismatches\n")
     
     # parse adjList for pValue distance
     adjList, indToPosDict = readDistMatrix()
@@ -174,32 +183,111 @@ if __name__ == "__main__":
     
     # compute independent variables for each position
     for posKey in allPos:
+        
+        # set up fit data and do the fit
         x = []
         y = []
         z = []
         for tp in allTimePoints:
             # calculate next z
-            z.append(tp.postPos.get(posKey))
+            z.append(binConvert(tp.postPos.get(posKey)))
             # calculate next y
             sigmaProx = 0.0
             for prox in allPos[posKey].proxPos:
-                sigmaProx += tp.prePos[prox] * (1 / tp.dT) * temporalDiff(prox) * spatialDiff(adjList[prox][posKey])
+                sigmaProx += binConvert(tp.prePos[prox]) * (1 / tp.dT) * temporalDiff(prox) * spatialDiff(adjList[prox][posKey])
             y.append(sigmaProx)
             # calculate next x
-            x.append(tp.prePos[posKey] * (1 / tp.dT) * temporalDiff(posKey))
-            
-        # initial guesses for a, b:
-        # p0 = 1, 2
-            
-        # compute fit parameters and write to file output   
-        print(len(x))
-        print(len(y))
-        print(len(z))
+            x.append(binConvert(tp.prePos[posKey]) * (1 / tp.dT) * temporalDiff(posKey))
         
-        fitResult = curve_fit(func, (x,y), z)
+        fitResult = curve_fit(func, (x, y), zs)
+        print(fitResult)
+        temporalWeight = fitResult[0][0];
+        spatialWeight = fitResult[0][1];
+         
+        # after computations are done, analyze the errors (calculate z using x and y)
+        zEstimate = []
+        for i in range(0, len(x)):
+            zEstimate.append(func((x[i], y[i]), temporalWeight, spatialWeight))
+        total = 0
+        totalMismatches = 0
+        positiveMismatches = 0
+        negativeMismatches = 0
+        for actual, estimated in zip(z, zEstimate):
+            actual = binConvertNum(actual)
+            estimated = binConvertNum(estimated)
+            
+            # do stats
+            total += 1
+            if actual != estimated:
+                totalMismatches += 1
+                if estimated > actual:
+                    positiveMismatches += 1
+                else:
+                    negativeMismatches += 1
+        
+        # prepare fit results to be written to file
+        nextLine = ""
+        nextLine += str(posKey)
+        nextLine += "," + str(temporalWeight)
+        nextLine += "," + str(spatialWeight)
+        
+        # prepare error analysis results to outfile
+        nextLine += "," + str(total)
+        nextLine += "," + str(totalMismatches)
+        nextLine += "," + str(positiveMismatches)
+        nextLine += "," + str(negativeMismatches)
+        
+        # write output
         with open(outFileName, 'a') as outFile:
-            nextLine = ""
-            nextLine += str(posKey)
-            nextLine += "," + str(fitResult[0][0])
-            nextLine += "," + str(fitResult[0][1]) + "\n"
             outFile.write(nextLine)
+        
+        # write volatility values and prediction results right next to them
+        with open("resultCompare.csv", 'w') as compareFile:
+            writer = csv.writer(compareFile, lineterminator = '\n')
+            
+            # write header
+            firstRow = ['patient', 'dT']
+            for p in allPos[posKey].proxPos:
+                firstRow.append(str(p) + "-")
+                firstRow.append(str(p) + '+')
+            firstRow.append('actual')
+            firstRow.append('estimated')
+            firstRow.append('proxmal contribution (everything except weights)')
+            firstRow.append('presistence contribution (everything except weights)')
+            writer.writerow(firstRow)
+            
+            # writer body
+            z = []
+            for tp in allTimePoints:
+                z.append(tp.postPos.get(posKey))
+                
+            count = -1
+            for tp in allTimePoints:
+                
+                # write tau values (spatial)
+                tauRow = ['Tau','',]
+                for p in allPos[posKey].proxPos:
+                    tauRow.append(temporalDiff(p))
+                    tauRow.append('')
+                writer.writerow(tauRow)
+                
+                # write deltas
+                deltaRow = ['delta','',]
+                for p in allPos[posKey].proxPos:
+                    deltaRow.append(spatialDiff(adjList[p][posKey]))
+                    deltaRow.append('')
+                writer.writerow(deltaRow)
+                
+                # write input data
+                count += 1
+                nextRow = [tp.patient, tp.dT]
+                for p in allPos[posKey].proxPos:
+                    nextRow.append(tp.prePos[p])
+                    nextRow.append(tp.postPos[p])
+                nextRow.append(z[count])
+                nextRow.append(zEstimate[count])
+                nextRow.append(y[count])
+                nextRow.append(x[count])
+                writer.writerow(nextRow)
+                writer.writerow([])
+                    
