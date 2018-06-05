@@ -6,7 +6,7 @@ import math
 import re
 
 # inputs
-testSetFileName = 'decideBins.txt'
+testSetFileName = 'decideBins-consec.txt'
 pValueMatrixFileName = 'matrix.csv'
 outFileName = 'out.csv'
 
@@ -294,8 +294,8 @@ if __name__ == "__main__":
     # write the file columns (for 332 specifically)
     with open('fiveColumns.csv', 'w') as outFile:
         writer = csv.writer(outFile, lineterminator = '\n')
-        writer.writerow(['V332 t-1', 'presistence', 'proximal', 'estimated', 'actual'])
+        writer.writerow(['pateint', 'dt', 'V332 t-1', 'presistence', 'proximal', 'estimated', 'actual t+1'])
         for i in range(0, len(allTimePoints)):
-            row = [allTimePoints[i].prePos[332], y[i], x[i], zEstimate[i], allTimePoints[i].postPos[332]]
+            row = [allTimePoints[i].patient, allTimePoints[i].dT, allTimePoints[i].prePos[332], x[i], y[i], zEstimate[i], allTimePoints[i].postPos[332]]
             writer.writerow(row)
                     
