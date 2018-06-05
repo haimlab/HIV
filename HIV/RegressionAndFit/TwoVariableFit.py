@@ -107,9 +107,9 @@ def readDistMatrix():
                     adjList[indToPosDict[key]] = {}
                 continue
             for i in range(1, len(line)):
-                if line[i].strip() != '':
+                if line[i].strip() != '': # empty cells
                     adjList[indToPosDict[colInd]][indToPosDict[i]] = float(line[i])
-                    adjList[indToPosDict[i]][indToPosDict[colInd]] = float(line[i])
+                    adjList[indToPosDict[i]][indToPosDict[colInd]] = float(line[i])               
             colInd += 1
         return adjList, indToPosDict
 
@@ -199,7 +199,7 @@ if __name__ == "__main__":
             # calculate next x
             x.append(binConvert(tp.prePos[posKey]) * (1 / tp.dT) * temporalDiff(posKey))
         
-        fitResult = curve_fit(func, (x, y), zs)
+        fitResult = curve_fit(func, (x, y), z)
         print(fitResult)
         temporalWeight = fitResult[0][0];
         spatialWeight = fitResult[0][1];
@@ -256,10 +256,10 @@ if __name__ == "__main__":
             firstRow.append('presistence contribution (everything except weights)')
             writer.writerow(firstRow)
             
-            # writer body
-            z = []
+            # write body
+            z2 = []
             for tp in allTimePoints:
-                z.append(tp.postPos.get(posKey))
+                z2.append(tp.postPos.get(posKey))
                 
             count = -1
             for tp in allTimePoints:
@@ -284,10 +284,18 @@ if __name__ == "__main__":
                 for p in allPos[posKey].proxPos:
                     nextRow.append(tp.prePos[p])
                     nextRow.append(tp.postPos[p])
-                nextRow.append(z[count])
+                nextRow.append(z2[count])
                 nextRow.append(zEstimate[count])
                 nextRow.append(y[count])
                 nextRow.append(x[count])
                 writer.writerow(nextRow)
                 writer.writerow([])
+        
+    # write the file columns (for 332 specifically)
+    with open('fiveColumns.csv', 'w') as outFile:
+        writer = csv.writer(outFile, lineterminator = '\n')
+        writer.writerow(['V332 t-1', 'presistence', 'proximal', 'estimated', 'actual'])
+        for i in range(0, len(allTimePoints)):
+            row = [allTimePoints[i].prePos[332], y[i], x[i], zEstimate[i], allTimePoints[i].postPos[332]]
+            writer.writerow(row)
                     
