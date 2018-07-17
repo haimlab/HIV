@@ -5,22 +5,25 @@ import numpy as np
 
 # all input variables
 fiveD = True
-vaccineSite = '2F5' # or 2F5
-geneticDistanceFolderName = "C:\\Users\\rdong6\\Desktop\\AE_5D_And_Regular_Volatility\\Genetic_Distance\\Hyphy_Output\\"
-pngsTableFileName = "C:\\Users\\rdong6\\Desktop\\AE_5D_And_Regular_Volatility\\Z_Conversion\\converted.txt"
+vaccineSite = '2F5'  # or 2F5
+geneticDistanceFolderName = "C:\\Users\\Rentian Dong\\Desktop\\AE_5D_And_Regular_Volatility\\Genetic_Distance" \
+                            "\\Hyphy_Output\\"
+pngsTableFileName = "C:\\Users\\Rentian Dong\\Desktop\\AE_5D_And_Regular_Volatility\\Z_Conversion\\converted.txt"
 # end of all input variables
 
 # get all distance file absolute path
 distanceFileNames = os.listdir(geneticDistanceFolderName)
 
+
 # takes in two vectors, and multiply number for each dimension
-def weightedEuclidean(diffVector, weights):
-    if len(diffVector) != len(weights):
+def weightedEuclidean(diffVector, weightVector):
+    if len(diffVector) != len(weightVector):
         raise Exception("Dimensions of input vectors mismatch")
-    sum = 0
+    mySum = 0
     for i in range(0, len(diffVector)):
-        sum += diffVector[i] ** 2 * weights[i]
-    return sum ** .5
+        mySum += diffVector[i] ** 2 * weightVector[i]
+    return mySum ** .5
+
 
 # read table into memory
 table = []
@@ -37,12 +40,13 @@ if fiveD:
     else:
         raise Exception("Unspecified calculation type")
 
-# mysterious function that does something specifial if a patient name starts with 2e
+
+# mysterious function that does something special if a patient name starts with 2e
 def mystic2eHandler(patientName):
-    patientName = patientName[2:] # remove 2e from patient name
+    patientName = patientName[2:]  # remove 2e from patient name
     flag = False
     processedString = ''
-    for char in t[0]:
+    for char in patientName:
         if char == '-':
             flag = True
         elif flag:
@@ -53,19 +57,19 @@ def mystic2eHandler(patientName):
             processedString += char
     return processedString
 
+
 # HyPhy Philips Style Matrix has number of Sequences listed in the first position of output
 # This code brings the matrix into python
 # read genetic distance table as a matrix into memory
 # returns (allIdentifiders, distanceMatrix, #envelopes)
 def readGeneticDistance(distanceFileName):
-
     identifiers = set()
     geneticDistanceMatrix = {}
 
     with open(distanceFileName, 'r') as distanceFile:
         isFirstRow = True
         for row in distanceFile:
-            if isFirstRow: # skip first row
+            if isFirstRow:  # skip first row
                 isFirstRow = False
                 continue
 
@@ -92,23 +96,18 @@ def readGeneticDistance(distanceFileName):
         numEnvelopes = len(identifiers)
         return identifiers, geneticDistanceMatrix, numEnvelopes
 
-# iterate and calculate all volatilities
-for nam in distanceFileNames:
 
-    # read in distance matrix and its identifiers
-    allIds, genDistMatrix, numEnvelopes = readGeneticDistance(geneticDistanceFolderName + nam)
-    if numEnvelopes < 2: # skip samples with 2 or less envelopes
-        continue
-
+# read in the pngs file rows whose identifier mathces that provided
+def readPngs(allIds):
     # read in pngs table
-    lines = [] # list of linse of pngs table, where each line separated in to list as space delimited
+    lines = []  # list of linse of pngs table, where each line separated in to list as space delimited
     years = []
     phases = []
 
     isFirstRow = True
     for line in table:
         if len(line) == 0:
-            break
+            continue
         t = line.split()
         if isFirstRow:
             isFirstRow = False
@@ -117,112 +116,92 @@ for nam in distanceFileNames:
             lines.append(t)
             continue
 
-        id = t[0] + '.' + t[1] + '.' + t[2].split("-")[0] + '.' + t[3]
-        if id not in allIds:
+        ID = t[0] + '.' + t[1] + '.' + t[2].split("-")[0] + '.' + t[3]
+        if ID not in allIds:
             continue
         if t[1] not in years:
             years.append(t[1])
         try:
             if t[2].split("-")[1] not in phases:
                 phases.append(t[2].split("-")[1])
-        except:
+        except IndexError:
             if "" not in phases:
                 phases.append("")
         lines.append(t)
 
+    return lines, years, phases
+
+
+# iterate and calculate all volatilities
+for nam in distanceFileNames:
+
+    # read distance matrix and pngs table
+    allIds, genDistMatrix, numEnvelopes = readGeneticDistance(geneticDistanceFolderName + nam)
+    if numEnvelopes < 2:  # skip samples with 2 or less envelopes
+        continue
+    lines, years, phases = readPngs(allIds)
     positions = lines[0][4:]  # all positions present in the pngs file
-    if vaccineSite == '2G12': # positions needed for this instance of calculation
+
+    if vaccineSite == '2G12':  # positions needed for this instance of calculation
         neededPositions = {295, 332, 339, 392, 448}
-        neededPositionsIndex = dict()
+        posIndices = dict()
         for i in range(0, len(positions)):
             if int(positions[i]) in neededPositions:
-                neededPositionsIndex[int(positions[i])] = i + 4
+                posIndices[int(positions[i])] = i + 4
     elif vaccineSite == '2F5':
         neededPositions = {662, 663, 664, 665, 667}
-        neededPositionsIndex = {}
+        posIndices = {}
         for i in range(0, len(positions)):
             if int(positions[i]) in neededPositions:
-                neededPositionsIndex[int(positions[i])] = i + 4
-    elif vaccineSite == 'Hydropathy': # every position present in the file
+                posIndices[int(positions[i])] = i + 4
+    elif vaccineSite == 'Hydropathy':  # every position present in the file
         neededPositions = set([int(pos) for pos in positions])
     else:
         raise Exception("unidentified position set")
 
     num = 0
-    vols = [0] * len(neededPositions)
-
+    vols = []
     for year in years:
         for phase in phases:
-            posCount = 0
             for pos in positions:
-                # calculate only the specified vaccine sites if required
-                if int(pos) not in neededPositions:
+                pos = int(pos)
+                if pos not in neededPositions:  # calculate only the specified vaccine sites if required
                     continue
-                envIds = [0] * numEnvelopes
+                envIds = []
                 PatNum = [0] * numEnvelopes
-                positionVals = [0] * numEnvelopes
+                positionVals = []
                 count = 0
                 yr_counter = 0
                 for line in lines:
-                    skipper = False
-                    already_skip = True
+                    skip = False
                     if len(line) == 0:
                         break
-                    if line[1] != year:
-                        yr_counter += 1
-                        skipper = True
-                        already_skip = False
                     try:
-                        if line[2].split("-")[1] != phase:
-                            if already_skip:
-                                yr_counter += 1
-                                skipper = True
+                        if line[1] != year or line[2].split("-")[1] != phase:
+                            yr_counter += 1
+                            skip = True
                     except IndexError:
                         pass
 
-                    if count < 1:
+                    if count < 1:  # ignoring header row of pngs table
                         count += 1
                         continue
-                    envIds[count - 1] = line[0] + '.' + line[1] + '.' + line[2].split("-")[0] + '.' + line[3]
-                    if(len(line) > (posCount+4)):
-                        positionVals[count - 1] = lookup(line[posCount + 4], int(pos), vaccineSite) # hydropathy
-                    if fiveD:
-                        #print(envIds[count - 1], flush=True)
-                        #string = ''
-                        #for key in neededPositionsIndex:
-                        #    string += line[neededPositionsIndex[key]]
-                        #print(string, flush=True)
-                        positionVals[count - 1] = np.array([
-                            lookup(line[neededPositionsIndex[key]], key, vaccineSite) for key in neededPositionsIndex
-                        ])
-                        #print(positionVals[count - 1], flush=True)
-                        #print('', flush=True)
-
-                    if skipper:
-                        if fiveD:
-                            positionVals[count - 1] = np.array([-1000])
-                        else:
-                            positionVals[count - 1] = -1000
+                    envIds.append(line[0] + '.' + line[1] + '.' + line[2].split("-")[0] + '.' + line[3])
+                    if skip:
+                        positionVals.append(None)
+                    elif fiveD:
+                        arr = np.array([lookup(line[posIndices[key]], key, vaccineSite) for key in posIndices])
+                        positionVals.append(arr)
+                    else:
+                        positionVals.append(lookup(line[posIndices[pos]], pos, vaccineSite))
                     count += 1
 
-                deltaVals = [[0.0 for _ in range(numEnvelopes)] for _ in range(numEnvelopes)]
-                volVals = [[0.0 for _ in range(numEnvelopes)] for _ in range(numEnvelopes)]
                 totalVol = 0
                 numCalcs = 0
                 for i in range(0, numEnvelopes):
-                    for j in range(0, numEnvelopes):
-                        if i == j:
-                            break
-                        if fiveD:
-                            try:
-                                if positionVals[i][0] == -1000 or positionVals[j][0] == -1000:
-                                    continue
-                            except:
-                                pass
-                        else:
-                            if positionVals[i] == -1000 or positionVals[j] == -1000:
-                                continue
-
+                    for j in range(0, i):
+                        if positionVals[i] is None or positionVals[j] is None:
+                            continue
                         diffs = positionVals[i] - positionVals[j]
                         if fiveD:
                             phenotypicDist = weightedEuclidean(diffs, weights)
@@ -230,26 +209,21 @@ for nam in distanceFileNames:
                             phenotypicDist = math.pow(diffs, 2)
                         totalVol += phenotypicDist / genDistMatrix[(envIds[i], envIds[j])]
                         numCalcs += 1
-
-                vols[posCount] = str(totalVol / numCalcs)
-                posCount += 1
+                vols.append(str(totalVol / numCalcs))
 
                 num = count - yr_counter
 
                 if fiveD:
                     break
-            vol_string = " "
-            for vol in vols:
-                vol_string += str(vol) + ' '
 
+            vol_string = " ".join(vols)
             try:
                 if num > 1:
-                    if fiveD:
-                        print(str(num) + ' ' + line[0] + ' ' + year + ' ' + line[2].split("-")[0] + ' ' + phase + ' ' + line[3] + '  ' + vols[0])
-                    else:
-                        print(str(num) + ' ' + line[0] + ' ' + year + ' ' + line[2].split("-")[0] + ' ' + phase + ' ' + line[3] + ' ' + vol_string)
-            except:
-                if fiveD:
-                    print(str(num) + " " + '-' + ' ' + year + ' ' + nam + ' ' + phase + ' ' + '-' + '  ' + vols[0])
-                else:
-                    print(str(num) +" "+ '-' + ' ' + year +' '+ nam +' '+ phase+' '+'-'+' '+vol_string)
+                    resultStrList = [str(num), line[0], year, line[2].split("-")[0], phase, line[3]]
+            except KeyError:
+                resultStrList = [str(num), '-', year, nam, phase, '-', vols[0]]
+            if fiveD:
+                resultStrList.append(vols[0])
+            else:
+                resultStrList.append(vol_string)
+            print(' '.join(resultStrList))
