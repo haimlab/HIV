@@ -10,11 +10,13 @@ site = '2G12'  # 2G12/2F5/all
 isFiveD = False
 lookupSource = 'bindingefficiency'
 geneticDistanceFolderName = "C:\\Users\\rdong6\\Desktop\\C_5D_And_Regular_Volatility\\Genetic_Distance\\Hyphy_Output\\"
-pngsTableFileName = "C:\\Users\\rdong6\\Desktop\\C_5D_And_Regular_Volatility\\Pngs_Conversion\\Outputs\\gaps_removed\\all_together_formatted.txt"
+pngsTableFileName = "C:\\Users\\rdong6\\Desktop\\C_5D_And_Regular_Volatility\\Pngs_Conversion\\Outputs\\gaps_removed" \
+                    "\\all_together_formatted.txt "
 # end of all input variables
 
-# get all distance file absolute path
+# other constants
 distanceFileNames = os.listdir(geneticDistanceFolderName)
+skipLessThanTwoVolatilities = True
 
 
 # takes in two vectors, and multiply number for each dimension
@@ -26,23 +28,6 @@ def weightedEuclidean(vec1, vec2, weightVector):
     for i in range(0, len(diffVector)):
         mySum += diffVector[i] ** 2 * weightVector[i]
     return mySum ** .5
-
-
-# read table into memory
-table = []
-with open(pngsTableFileName, 'r') as tableFile:
-    for line in tableFile:
-        table.append(line)
-
-# set up weight scale
-if site == '2G12':
-    weights = np.array([0.626, 0.81, 0.267, 0.45, 0.699])
-elif site == '2F5':
-    weights = np.array([1.242249, 0.86661, 0.219614, 0.855693, 0.789327])
-elif site == 'all':
-    pass
-else:
-    raise Exception("Unspecified calculation type")
 
 
 # read genetic distances as dictionary mapping a tuple of id to distance, group by time points
@@ -59,10 +44,10 @@ def readGeneticDistance(distFileName):
     return genDistMatrix
 
 
-# read in pngs file as dictionary mapping from id pair to envelope
+# read in pngs file as dictionary mapping from id pair to Amino Acid Sequences
 def readPngs(pngsFileName):
-    allPosDict = dict()  # map position to index
-    pngsTable = dict()
+    # allPosDict maps positions to index in pngs table relative to first letter
+    allPosDict, pngsTable = dict(), dict()
     with open(pngsFileName, 'r') as pngsFile:
         isFirstLine = True
         for line in pngsFile:
@@ -77,6 +62,7 @@ def readPngs(pngsFileName):
             pngsTable['.'.join(line[:headerOffset])] = line[headerOffset:]
     return pngsTable, allPosDict
 
+
 # takes a vaccineSite and a list of positions ordered the same way as that in pngs file. Returns the positions we want
 # to calculate volatility for and their w.r.t row (including header columns)
 def getNeededPositions(site, allPosDict):
@@ -85,7 +71,7 @@ def getNeededPositions(site, allPosDict):
     elif site == '2F5':
         needed = {662, 663, 664, 665, 667}
     elif site == 'all':
-        needed = set([pos for pos in allPosDict])  # every position present in the file
+        needed = set([pos for pos in allPosDict])  # all present positions
     else:
         raise Exception("unidentified position set")
     neededPosInds = dict()
@@ -105,10 +91,7 @@ def calcVolatility(genDistMatrix, pngsTable, neededPosInds, isFiveD, lookupSourc
             for pos in neededPosInds:
                 vec1.append(lookup(pngsTable[id1][neededPosInds[pos]], pos, lookupSource))
                 vec2.append(lookup(pngsTable[id2][neededPosInds[pos]], pos, lookupSource))
-            phyDist = weightedEuclidean(vec1, vec2, weights)
-            genDist = genDistMatrix[id1, id2]
-            div = phyDist / genDist
-            total += div
+            total += weightedEuclidean(vec1, vec2, weights) / genDistMatrix[id1, id2]
         volatilities.append(total / len(genDistMatrix))
     else:
         for pos in neededPosInds:
@@ -116,29 +99,40 @@ def calcVolatility(genDistMatrix, pngsTable, neededPosInds, isFiveD, lookupSourc
             for id1, id2 in genDistMatrix:
                 v1 = lookup(pngsTable[id1][neededPosInds[pos]], pos, lookupSource)
                 v2 = lookup(pngsTable[id2][neededPosInds[pos]], pos, lookupSource)
-                phyDist = (v1 - v2) ** 2
-                genDist = genDistMatrix[id1, id2]
-                div = phyDist / genDist
-                total += div
+                total += (v1 - v2) ** 2 / genDistMatrix[id1, id2]
             volatilities.append(total / len(genDistMatrix))
     return volatilities
 
 
-# calculate all 5D volatilities
-pngsTable, allPosDict = readPngs(pngsTableFileName)
+# set up weight scale
+if site == '2G12':
+    weights = np.array([0.626, 0.81, 0.267, 0.45, 0.699])
+elif site == '2F5':
+    weights = np.array([1.242249, 0.86661, 0.219614, 0.855693, 0.789327])
+elif site == 'all':
+    pass
+else:
+    raise Exception("Unspecified calculation type")
+
+# calculate all volatilities
+pngsTable, allPosDict = readPngs(pngsTableFileName)  # read pngs table into memroy
 neededPosInds = getNeededPositions(site, allPosDict)
 for patientFileName in distanceFileNames:
 
+    # read genetic distance matrix into memory
     genDistMatrix = readGeneticDistance(geneticDistanceFolderName + patientFileName)
-    if len(genDistMatrix) == 0: # if smaple has < 2 envelopes hyphy output (genetic distances) contains nothing
+    if len(genDistMatrix) == 0:  # empty hyphy output file due to too few envelopes in time point
         continue
-    volatility = calcVolatility(genDistMatrix, pngsTable, neededPosInds, isFiveD, lookupSource)
 
-    uniqueIds = set() # calculate number of envelopes as number of unique identifiers in the distance matrix
+    volatility = calcVolatility(genDistMatrix, pngsTable, neededPosInds, isFiveD, lookupSource)  # calculate volatility
+
+    uniqueIds = set()  # calculate number of envelopes as number of unique identifiers in the distance matrix
     for id1, id2 in genDistMatrix:
         uniqueIds.add(id1)
         uniqueIds.add(id2)
     numEnvs = len(uniqueIds)
+    if skipLessThanTwoVolatilities and numEnvs < 2:
+        continue
 
     # generate output string id for the patient
     for key, _ in genDistMatrix:
@@ -147,4 +141,4 @@ for patientFileName in distanceFileNames:
 
     # write output to display
     strVolatility = [str(vol) for vol in volatility]
-    print (" ".join([str(numEnvs)] + patientIdList + strVolatility))
+    print(" ".join([str(numEnvs)] + patientIdList + strVolatility))
