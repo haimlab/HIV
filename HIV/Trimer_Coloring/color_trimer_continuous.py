@@ -179,12 +179,11 @@ if __name__ == '__main__':
     posTo1600Dict = parse1600PosFiles(POS_1600_FILE_NAMES)
     posToColor = determineAllColors(posToVal, posTo1600Dict, colorRanges)
 
-    # write calculated colors to chimera batch scripts and execute them
+    # write calculated colors to batch scripts excutable by chimera
     writeBatchScript()
     writeCommandFile(posToColor)
 
-    # execute the scripts we just created using python
-
+    # execute the scripts we just created
     p = Popen(batchScriptFileName)
     stdout, stderr = p.communicate()
 
