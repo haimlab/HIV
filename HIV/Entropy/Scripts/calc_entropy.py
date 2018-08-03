@@ -1,67 +1,87 @@
-import region_separation
 import requests
-import re
+import region_separation
+from html.parser import HTMLParser
+import csv
 
 # script level constants
-url = 'https://www.hiv.lanl.gov/cgi-bin/ENTROPY/entropy_one.cgi'
-url2 = 'https://www.hiv.lanl.gov'
+ENTROPY1_CALC_URL = 'https://www.hiv.lanl.gov/cgi-bin/ENTROPY/entropy_one.cgi'
+LANL_HOME_URL = 'https://www.hiv.lanl.gov'
 NUM_HEADER_COLS = 4
 COUNTRY = 0
 YEAR = 1
 START = 0
 END = 1
-POS_WANTED = [295, 332, 339, 392, 448, 662, 663, 664, 665, 667] # epitope positions only
-#POS_WANTED = [i for i in range(1, 857)] # all positions
+POS_WANTED = [295, 332, 339, 392, 448, 662, 663, 664, 665, 667]  # epitope positions only
+periods = [
+    (1979, 1986),  # both ends inclusive
+    (1987, 1994),
+    (1995, 1999),
+    (2000, 2004),
+    (2005, 2009),
+    (2010, 2015),
+    (2007, 2015)
+]
 ASIA = ('CN', 'CHINA', 'CN CAT', 'HK', 'IN', 'JP', 'KR', 'MM', 'PH', 'TH', 'TH CAT', 'TW', 'SG')
-EU = ('CH', 'CY', 'DE', 'DK', 'ES', 'FR', 'GB', 'IT', 'PL', 'SE', 'NL', 'BE')
-NA = ('CA', 'CARR CAT', 'CU', 'DO', 'HT', 'JM', 'TT', 'US', 'US CAT', 'US ICUW')
-SA = ('ZA', 'BW') # south africa
-# end of script level constants
+EU = ('CH', 'CY', 'DE', 'DK', 'ES', 'FR', 'GB', 'IT', 'PL', 'SE', 'NL', 'BE')  # europe
+NA = ('CA', 'CARR CAT', 'CU', 'DO', 'HT', 'JM', 'TT', 'US', 'US CAT', 'US ICUW')  # north americ
+SA = ('ZA', 'BW')  # south africa
+CLADE_AE_FILE_NAME = '..\\Inputs\\clade_AE_all_aligned.csv'
+CLADE_B_FILE_NAME = '..\\Inputs\\clade_B_all_aligned.csv'
+CLADE_C_FILE_NAME = '..\\Inputs\\clade_C_all_aligned.csv'
 
 # inputs
 clade = 'C'
-periods = [(1979, 1986), (1987, 1994), (1995, 1999),(2000, 2004), (2005, 2009), (2010, 2015), (2007, 2015)] # both ends inclusive
-countrySet1 = []
-inFileName = '..\\Inputs\\clade_C_all_aligned.csv'
 outDir = '..\\Temp\\'
-# end of inputs
 
+
+# determine which pre-stored input file to use
+def choose_input(clade):
+    if clade == 'AE':
+        return CLADE_AE_FILE_NAME
+    if clade == 'B':
+        return CLADE_B_FILE_NAME
+    if clade == 'C':
+        return CLADE_C_FILE_NAME
+    else:
+        raise Exception('Unknown Clade')
+
+
+# find the index of the nth occurence of target in string
 def findNth(string, target, n):
-    if (n < 1):
+    if n < 1:
         raise Exception('Error')
 
     start = -1
     while n > 0:
         start = string.find(target, start + 1)
-        n = n - 1
+        n -= 1
     return start
 
 
+inFileName = choose_input(clade)
 group = region_separation.classify(POS_WANTED, SA, inFileName, periods)
 strList = group.toStrList()
 
-data={'seq_input': strList[2]}
+form_data = {'seq_input': strList[2]}
 
-r = requests.post(url, data=data) # calcualte enetropy
-src = r.text[findNth(r.text, '<', 3) + 12 : r.text.find('>', findNth(r.text, '<', 3)) - 1]
+r = requests.post(ENTROPY1_CALC_URL, data=form_data)  # calcualte enetropy
+src = r.text[findNth(r.text, '<', 3) + 12: r.text.find('>', findNth(r.text, '<', 3)) - 1]
 
-r = requests.get(url2 + src) # go to entropy page
+r = requests.get(LANL_HOME_URL + src)  # go to entropy page
 i = findNth(r.text, '<', 22)
 j = r.text.find('>', i)
-textFormUrl = r.text[i + 9 : j - 20]
-r = requests.get(url2 + textFormUrl) # go to entropy text form page
+textFormUrl = r.text[i + 9: j - 20]
+r = requests.get(LANL_HOME_URL + textFormUrl)  # go to entropy text form page
 htmlText = r.text
 with open('sample.html', 'w') as sampleFile:
     sampleFile.write(r.text)
 
 
-
-
 # parse html
-from html.parser import HTMLParser
-from html.entities import name2codepoint
-
 class MyHTMLParser(HTMLParser):
+
+    def error(self, message):
+        raise Exception("HTML parsing error")
 
     def __init__(self):
         super().__init__()
@@ -90,13 +110,11 @@ class MyHTMLParser(HTMLParser):
                     self.curColNum = 1
         print("Data     :", data)
 
+
 parser = MyHTMLParser()
 parser.feed(htmlText)
 
-
 # write parsed table to output file
-import csv
-
 with open('..\\Temp\\out.csv', 'w') as outFile:
     writer = csv.writer(outFile, lineterminator='\n')
     writer.writerows(parser.table)
