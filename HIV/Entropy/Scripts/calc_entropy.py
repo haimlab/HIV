@@ -31,7 +31,7 @@ CLADE_C_FILE_NAME = '..\\Inputs\\clade_C_all_aligned.csv'
 
 # inputs
 clade = 'C'
-outDir = '..\\Temp\\'
+outFileName = '..\\Temp\\out.csv'
 
 
 # determine which pre-stored input file to use
@@ -71,10 +71,7 @@ r = requests.get(LANL_HOME_URL + src)  # go to entropy page
 i = findNth(r.text, '<', 22)
 j = r.text.find('>', i)
 textFormUrl = r.text[i + 9: j - 20]
-r = requests.get(LANL_HOME_URL + textFormUrl)  # go to entropy text form page
-htmlText = r.text
-with open('sample.html', 'w') as sampleFile:
-    sampleFile.write(r.text)
+htmlText = requests.get(LANL_HOME_URL + textFormUrl).text  # page with entropy results
 
 
 # parse html
@@ -108,13 +105,12 @@ class MyHTMLParser(HTMLParser):
                     self.table.append(self.row)
                     self.row = []
                     self.curColNum = 1
-        print("Data     :", data)
 
 
 parser = MyHTMLParser()
 parser.feed(htmlText)
 
 # write parsed table to output file
-with open('..\\Temp\\out.csv', 'w') as outFile:
+with open(outFileName, 'w') as outFile:
     writer = csv.writer(outFile, lineterminator='\n')
     writer.writerows(parser.table)
