@@ -11,7 +11,8 @@ COUNTRY = 0
 YEAR = 1
 START = 0
 END = 1
-POS_WANTED = [295, 332, 339, 392, 448, 662, 663, 664, 665, 667]  # epitope positions only
+EPITOPE_POS = [295, 332, 339, 392, 448, 662, 663, 664, 665, 667]  # epitope positions only
+ALL_POS = [i for i in range(1, 857)]
 periods = [
     (1979, 1986),  # both ends inclusive
     (1987, 1994),
@@ -21,17 +22,22 @@ periods = [
     (2010, 2015),
     (2007, 2015)
 ]
-ASIA = ('CN', 'CHINA', 'CN CAT', 'HK', 'IN', 'JP', 'KR', 'MM', 'PH', 'TH', 'TH CAT', 'TW', 'SG')
+ASIA = ('CN', 'CHINA', 'CN CAT', 'HK', 'IN', 'JP', 'KR', 'MM', 'PH', 'TH', 'TH CAT', 'TW', 'SG', 'NP')
+ECA = ('DJ', 'BI', 'ET', 'UG', 'KE', 'TZ', 'SO', 'MW', 'ZM')  # east and central africa
 EU = ('CH', 'CY', 'DE', 'DK', 'ES', 'FR', 'GB', 'IT', 'PL', 'SE', 'NL', 'BE')  # europe
+KOREAN = ('KR',)
 NA = ('CA', 'CARR CAT', 'CU', 'DO', 'HT', 'JM', 'TT', 'US', 'US CAT', 'US ICUW')  # north americ
 SA = ('ZA', 'BW')  # south africa
-CLADE_AE_FILE_NAME = '..\\Inputs\\clade_AE_all_aligned.csv'
-CLADE_B_FILE_NAME = '..\\Inputs\\clade_B_all_aligned.csv'
-CLADE_C_FILE_NAME = '..\\Inputs\\clade_C_all_aligned.csv'
+CLADE_AE_FILE_NAME = '..\\Inputs\\clade_AE.csv'
+CLADE_B_FILE_NAME = '..\\Inputs\\clade_B.csv'
+CLADE_C_FILE_NAME = '..\\Inputs\\clade_C.csv'
 
 # inputs
 clade = 'C'
-outFileName = '..\\Temp\\out.csv'
+period = 7
+outFileName = 'C:\\Users\\rdong6\\Desktop\\Temp\\out.csv'
+countries_wanted = ASIA
+pos_wanted = EPITOPE_POS
 
 
 # determine which pre-stored input file to use
@@ -59,10 +65,16 @@ def findNth(string, target, n):
 
 
 inFileName = choose_input(clade)
-group = region_separation.classify(POS_WANTED, SA, inFileName, periods)
+group = region_separation.classify(pos_wanted, countries_wanted, inFileName, periods)
 strList = group.toStrList()
 
-form_data = {'seq_input': strList[2]}
+
+period_ind = period - 1
+num_isolates = len(group.periods[periods[period_ind]])
+if num_isolates == 0:
+    print('selected country and period combination has no isolates, aborting')
+    exit(-1)
+form_data = {'seq_input': strList[period_ind]}
 
 r = requests.post(ENTROPY1_CALC_URL, data=form_data)  # calcualte enetropy
 src = r.text[findNth(r.text, '<', 3) + 12: r.text.find('>', findNth(r.text, '<', 3)) - 1]
@@ -114,3 +126,5 @@ parser.feed(htmlText)
 with open(outFileName, 'w') as outFile:
     writer = csv.writer(outFile, lineterminator='\n')
     writer.writerows(parser.table)
+    writer.writerow(countries_wanted)  # all contries used
+    writer.writerow(["#isolates"] + [str(num_isolates)])  # number of isolates
