@@ -8,6 +8,7 @@ class Region(Enum):
     SA = 'SA'
     ECA = 'ECA'
     BR = 'BR'
+    ALL = 'ALL'
 
 
 # enumeration to represent AA
