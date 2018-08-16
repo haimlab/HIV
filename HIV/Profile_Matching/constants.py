@@ -1,14 +1,17 @@
 from enum import Enum
 
+
 # enumeration to represent regions
 class Region(Enum):
-    NA = 'NA'
-    EU = 'EU'
-    KOR = 'KOR'
-    SA = 'SA'
-    ECA = 'ECA'
-    BR = 'BR'
     ALL = 'ALL'
+    ASiA = 'ASIA'
+    BR = 'BR'
+    ECA = 'ECA'
+    EU = 'EU'
+    INNP = 'INNP'
+    KOREA = 'KOREA'
+    NA = 'NA'
+    SA = 'SA'
 
 
 # enumeration to represent AA
@@ -41,3 +44,11 @@ class Clade(Enum):
     AE = 'AE'
     B = 'B'
     C = 'C'
+
+
+# properties that can be applied with filter
+class FilterProperties(Enum):
+    CLADE = 'CLADE'
+    REGION = 'REGION'
+    POSITION = 'POSITION'
+    AMINOACID = 'AMINOACID'

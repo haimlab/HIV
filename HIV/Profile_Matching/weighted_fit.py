@@ -2,12 +2,15 @@ import csv
 import numpy as np
 import pylab
 import sys
+import os
+from copy import deepcopy
 from scipy.optimize import curve_fit
 from math import log10
 from math import exp
 from constants import Clade
 from constants import Region
 from constants import AminoAcid
+from constants import FilterProperties
 
 
 # object to hold a fit result
@@ -17,26 +20,92 @@ class FitResult:
         self.slope = slope
         self.r = r
 
+    # calculate year based on percent
+    def calcYear(self, percent):
+        return (percent - self.y_intercept) / self.slope
+
 
 # object to hold a single distribution profile
 class Profile:
-    def __init__(self, aminoAcid, clade, region, distr, numIso, years):
-        self.aminoAcid = aminoAcid
+    def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
+        self.aminoAcid = aminoAcid # a single amino acid
         self.clade = clade
         self.region = region
         self.years = years
         self.distr = distr # percentages, in same order as years
         self.numIso = numIso # #isolates, in same order as years
+        self.position = position
         self.fit = None # a fit object
         self.mostSimilar = None # another profile with minimal euc dist
-        
+
+    # renove data points that have 0 isolates
+    def remove_0_isolates(self):
+        index = 0
+        while index < len(self.numIso):
+            if self.numIso[index] == 0:
+                del self.numIso[index]
+                del self.years[index]
+                del self.distr[index]
+                continue
+            index += 1
+
     # generate a string to identify this profile
     def tag(self):
         components = [self.clade.value, self.region.value, self.aminoAcid.value]
         return "_".join(components)
 
+
+# object to hold all profiles and a filtering method
+class AllProfiles:
+    def __init__(self):
+        self.profiles = []
+
+    def add_profile(self, profile):
+        self.profiles.append(profile)
+
+    def __filterBy(self, value, property):
+        filteredProfiles = AllProfiles()
+        for p in self.profiles:
+            if property == FilterProperties.AMINOACID:
+                curValue = p.aminoAcid
+            elif property == FilterProperties.CLADE:
+                curValue = p.clade
+            elif property == FilterProperties.POSITION:
+                curValue = p.position
+            elif property == FilterProperties.REGION:
+                curValue = p.region
+            else:
+                raise Exception('Unidentified filter property')
+            if curValue == value:
+                filteredProfiles.add_profile(p)
+        return filteredProfiles
+
+
+    # filter the profiles according to given criteria
+    # returns a result also as AllProfiles instance, so chained filtering can be applied
+    def filter(self, clade=None, region=None, aminoAcid=None, position=None):
+
+        # do the filtering
+        filtered = self
+        if clade is not None:
+            filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
+        if region is not None:
+            filtered = filtered.__filterBy(region, FilterProperties.REGION)
+        if aminoAcid is not None:
+            filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
+        if position is not None:
+            filtered = filtered.__filterBy(position, FilterProperties.POSITION)
+
+        # return result, if there is one
+        if not filtered is None:
+            return filtered
+        else:
+            return self
+
+
 # take a profile and compute its weighted linear fit
-def calcFit(profile): 
+def calcFit(profile):
+    profile.remove_0_isolates()
     sigmas = np.array([1 / n ** .5 for n in profile.numIso]) # weights
     params, cov = curve_fit(lambda x, a, b: a * x + b, profile.years,
                             profile.distr, sigma=sigmas, absolute_sigma=False)
@@ -62,34 +131,47 @@ def parseFileName(fileName):
 
 # read a file for a clade-region combination into profile instances
 def read(fileName):
-    
+
     allProfiles = []
     clade, region, position = parseFileName(fileName)
-    
+
     with open(fileName, 'r') as file:
         reader = csv.reader(file)
-        
+
         # read in years
         firstRow = next(reader)
         years = []
         for i in range(1, len(firstRow)):
             years.append(calcYear(firstRow[i]))
-        
+
         # read in #isolates
         secondRow = next(reader)
         numIso = []
         for i in range(1, len(secondRow)):
             numIso.append(int(secondRow[i]))
-        
+
         # read in remaining rows
         for row in reader:
             aminoAcid = AminoAcid(row[0])
             distr = []
             for i in range(1, len(row)):
                 distr.append(float(row[i]))
-            profile = Profile(aminoAcid, clade, region, distr, numIso, years)
+            profile = Profile(aminoAcid, clade, region, distr, deepcopy(numIso), deepcopy(years), position)
             allProfiles.append(profile)
-        
+
+    return allProfiles
+
+
+def get_all_profiles(folderName):
+    rawFileNames = os.listdir(folderName)
+    fileNames = [os.path.join(folderName, fileName) for fileName in rawFileNames]
+    profiles = []
+    for fileName in fileNames:
+        profiles += read(fileName)
+    for p in profiles:
+        calcFit(p)
+    allProfiles = AllProfiles()
+    allProfiles.profiles = profiles
     return allProfiles
 
 
@@ -112,76 +194,88 @@ def euclideanDist(p1, p2):
     return eucDist(p1, p2)
 
 
-# calculate the most similar profiles measured by euclidean distance
-def findMostSimilarProfiles(profiles):
-    for p1 in profiles:
-        if not p1.mostSimilar is None: # skip if similar profiels are already found
-            continue
-        dist = sys.float_info.max
-        for p2 in profiles:
-            if not p1 is p2: # avoid comparing with self
-                newDist = euclideanDist(p1, p2)
-                if newDist < dist:
-                    dist = newDist
-                    minDistProfile = p2
-        p1.mostSimilar = minDistProfile
-        minDistProfile.mostSimilar = p1
-
-
+# # calculate the most similar profiles measured by euclidean distance
+# def findMostSimilarProfiles(profiles):
+#     for p1 in profiles:
+#         if not p1.mostSimilar is None: # skip if similar profiels are already found
+#             continue
+#         dist = sys.float_info.max
+#         for p2 in profiles:
+#             if not p1 is p2: # avoid comparing with self
+#                 newDist = euclideanDist(p1, p2)
+#                 if newDist < dist:
+#                     dist = newDist
+#                     minDistProfile = p2
+#         p1.mostSimilar = minDistProfile
+#         minDistProfile.mostSimilar = p1
+#
+#
 def main():
     fileName = sys.argv[1]
     profiles = read(fileName)
-    for p in profiles:
+    for p in profiles.profiles:
         calcFit(p)
-    findMostSimilarProfiles(profiles)
+
+    # plot second profile for verification
+    p = profiles.profiles[2]
+    x = p.years
+    yexact = p.distr
+    y = []
+    for i in x:
+        y.append(p.fit.slope * i + p.fit.y_intercept)
+    pylab.plot(x, yexact, 'o', label='Exact')
+    pylab.plot(x, y, label='weighted fit')
+    pylab.legend(loc='upper right')
+    pylab.show()
+
 
 # actual main
 if __name__ == '__main__':
     main()
-
-
-# tests and scratches
-if __name__ == '__main__':
-    
-    profiles = read('C:\\Users\\rdong6\\Desktop\\Weighted Fit Test Data\\B_ALL_332.csv')
-    for p in profiles:
-        calcFit(p)
-    
-    ## plot second profile for verification
-    #p = profiles[0]
-    #x = p.years
-    #yexact = p.distr
-    #y = []
-    #for i in x:
-        #y.append(p.fit.slope * i + p.fit.y_intercept)
-    #pylab.plot(x, yexact, 'o', label='Exact')
-    #pylab.plot(x, y, label='weighted fit')
-    #pylab.legend(loc='upper right')
-    #pylab.show()
-    
-    # verifiy the transform functions
-    L = 100
-    k = -1.2
-    x_0 = 5
-    logiFunc = lambda x: L / (1 + exp(k * (x - x_0))) # logistic function
-    logConvert = lambda x: 0 if x == 0 else log10(x) + 1 # log convert
-    combinedFunc = lambda x: logiFunc(logConvert(x)) # combined logistic and log
-    # use B NA / all B
-    pylab.figure() 
-    for p in profiles:
-        y = [combinedFunc(i) for i in p.distr]
-        pylab.plot(p.distr, y, 'o', label=p.tag())
-    pylab.xlabel("actual")
-    pylab.ylabel("converted")
-    pylab.xscale('log')
-    pylab.legend(loc='lower right')
-    pylab.show()
-    
-    # export as two columns
-    with open('C:\\Users\\rdong6\\Desktop\\out.csv', 'w') as outFile:
-        writer = csv.writer(outFile, lineterminator='\n')
-        writer.writerow(['actual percentage', 'converted'])
-        for p in profiles:
-            y = [combinedFunc(i) for i in p.distr]
-            for a, b in zip(y, p.distr):
-                writer.writerow([b, a])
+#
+#
+# # tests and scratches
+# if __name__ == '__main__':
+#
+#     profiles = read('C:\\Users\\rdong6\\Desktop\\Weighted Fit Test Data\\B_ALL_332.csv')
+#     for p in profiles:
+#         calcFit(p)
+#
+#     ## plot second profile for verification
+#     #p = profiles[0]
+#     #x = p.years
+#     #yexact = p.distr
+#     #y = []
+#     #for i in x:
+#         #y.append(p.fit.slope * i + p.fit.y_intercept)
+#     #pylab.plot(x, yexact, 'o', label='Exact')
+#     #pylab.plot(x, y, label='weighted fit')
+#     #pylab.legend(loc='upper right')
+#     #pylab.show()
+#
+#     # verifiy the transform functions
+#     L = 100
+#     k = -1.2
+#     x_0 = 5
+#     logiFunc = lambda x: L / (1 + exp(k * (x - x_0))) # logistic function
+#     logConvert = lambda x: 0 if x == 0 else log10(x) + 1 # log convert
+#     combinedFunc = lambda x: logiFunc(logConvert(x)) # combined logistic and log
+#     # use B NA / all B
+#     pylab.figure()
+#     for p in profiles:
+#         y = [combinedFunc(i) for i in p.distr]
+#         pylab.plot(p.distr, y, 'o', label=p.tag())
+#     pylab.xlabel("actual")
+#     pylab.ylabel("converted")
+#     pylab.xscale('log')
+#     pylab.legend(loc='lower right')
+#     pylab.show()
+#
+#     # export as two columns
+#     with open('C:\\Users\\rdong6\\Desktop\\out.csv', 'w') as outFile:
+#         writer = csv.writer(outFile, lineterminator='\n')
+#         writer.writerow(['actual percentage', 'converted'])
+#         for p in profiles:
+#             y = [combinedFunc(i) for i in p.distr]
+#             for a, b in zip(y, p.distr):
+#                 writer.writerow([b, a])
