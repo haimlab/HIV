@@ -101,11 +101,7 @@ class AllProfiles:
         if position is not None:
             filtered = filtered.__filterBy(position, FilterProperties.POSITION)
 
-        # return result, if there is one
-        if not filtered is None:
-            return filtered
-        else:
-            return self
+        return filtered
 
 
 # calculate r square value of a linear regression, referencing following site

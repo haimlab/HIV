@@ -6,7 +6,6 @@ from constants import Region
 from weighted_fit import get_all_profiles
 from weighted_fit import calcYear
 
-
 # temporary hard-coded inputs
 queryProfile = {
     AminoAcid('Z'): 78.5,
@@ -42,6 +41,7 @@ class QueryInput:
         self.region = region
 
 
+# TODO all calulatinos need to account for position, currently assume everything form same position
 class Query:
     def __init__(self, query_input, all_profiles):
         self.all_profiles = all_profiles
@@ -71,6 +71,26 @@ class Query:
 
     def find_best_match(self):
 
+        def clac_r2_weighted_stdev(profile, clade, region):
+
+            # first calculate weighted average
+            total = 0
+            total_weights = 0
+            for aminoAcid in profile:
+                weight = self.fits[(clade, region)][aminoAcid].r
+                total_weights += weight
+                total += profile[aminoAcid] * weight
+            weighted_avg = total / total_weights
+
+            # then calculate weighted stdev
+            weighted_square_sum = 0
+            for aminoAcid in profile:
+                r2 = self.fits[(clade, region)][aminoAcid].r
+                percent = self.input.profile[aminoAcid]
+                weight = r2 ** 2 * percent
+                weighted_square_sum += weight * (profile[aminoAcid] - weighted_avg) ** 2
+            return (weighted_square_sum / (len(profile) - 1)) ** .5
+
         def calc_stdev(profile):
             sum = 0
             for aminoAcid in profile:
@@ -79,12 +99,13 @@ class Query:
             sum = 0
             for aminoAcid in profile:
                 sum += (profile[aminoAcid] - mean) ** 2
-            return (sum / len(profile)) ** .5
+            return (sum / (len(profile) - 1)) ** .5
 
         score = sys.float_info.max
         for clade, region in self.results:
             profileDict = self.results[(clade, region)]
-            cur_score = calc_stdev(profileDict)
+            # cur_score = calc_stdev(profileDict)
+            cur_score = clac_r2_weighted_stdev(profileDict, clade, region)
             self.scores[(clade, region)] = cur_score
             if cur_score < score:
                 score = cur_score
