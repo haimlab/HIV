@@ -147,6 +147,7 @@ def calcFit(profile):
 
     profile.remove_0_isolates()
 
+
     # to avoid float number round off errors, manually check if all data points are same
     # and assign slope = 0, y_intercept = any data point value, and r square = 1 (perfect fit)
     if checkEqual(profile.distr):
@@ -242,23 +243,6 @@ def euclideanDist(p1, p2):
     eucDist = lambda x, y: sum([(a - b) ** 2 for a, b in zip(p1, p2)]) ** .5
     return eucDist(p1, p2)
 
-
-# # calculate the most similar profiles measured by euclidean distance
-# def findMostSimilarProfiles(profiles):
-#     for p1 in profiles:
-#         if not p1.mostSimilar is None: # skip if similar profiels are already found
-#             continue
-#         dist = sys.float_info.max
-#         for p2 in profiles:
-#             if not p1 is p2: # avoid comparing with self
-#                 newDist = euclideanDist(p1, p2)
-#                 if newDist < dist:
-#                     dist = newDist
-#                     minDistProfile = p2
-#         p1.mostSimilar = minDistProfile
-#         minDistProfile.mostSimilar = p1
-#
-#
 
 def main():
     all_profiles = get_all_profiles(sys.argv[1])

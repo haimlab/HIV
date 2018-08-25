@@ -1,35 +1,17 @@
 import sys
 import csv
 from constants import AminoAcid
+from constants import query_profile_B_EU_295_00_to_04
+from constants import query_profile_B_EU_332_00_to_04
+from constants import query_profile_B_EU_339_00_to_04
+from constants import query_profile_B_EU_392_00_to_04
+from constants import query_profile_B_EU_448_00_to_04
 from constants import Clade
 from constants import Region
 from weighted_fit import get_all_profiles
 from weighted_fit import calcYear
 
 # temporary hard-coded inputs
-queryProfile = {
-    AminoAcid('Z'): 78.5,
-    AminoAcid('N'): 3.57,
-    AminoAcid('T'): 5.35,
-    AminoAcid('S'): 3.57,
-    AminoAcid('D'): 1.78,
-    AminoAcid('E'): 1.78,
-    AminoAcid('K'): 3.57,
-    AminoAcid('R'): 0,
-    AminoAcid('H'): 0,
-    AminoAcid('Y'): 0,
-    AminoAcid('Q'): 0,
-    AminoAcid('I'): 0,
-    AminoAcid('L'): 0,
-    AminoAcid('V'): 1.78,
-    AminoAcid('A'): 0,
-    AminoAcid('C'): 0,
-    AminoAcid('F'): 0,
-    AminoAcid('G'): 0,
-    AminoAcid('M'): 0,
-    AminoAcid('P'): 0,
-    AminoAcid('W'): 0,
-}
 
 
 class QueryInput:
@@ -41,13 +23,13 @@ class QueryInput:
         self.region = region
 
 
-# TODO all calulatinos need to account for position, currently assume everything form same position
 class Query:
     def __init__(self, query_input, all_profiles):
         self.all_profiles = all_profiles
         self.input = query_input
         self.results = {}  # {(clade, region) -> {amino acid -> year}}
         self.scores = {}  # {(clade, region) -> stdev of corresponding profile), for writing to file specifically
+        self.best_match_years = {}  # {(clade, region) -> year)}
         self.fits = {}  # {(clade, region) -> {amino acid -> fit object}}
         self.best_fit_clade = None
         self.best_fit_region = None
@@ -57,8 +39,8 @@ class Query:
             sub_profiles = all_profiles.filter(aminoAcid=aminoAcid)
             for p in sub_profiles.profiles:
                 self.add_result(p.clade, p.region, aminoAcid,
-                                p.fit.calcYear(queryProfile[aminoAcid],
-                                calcYear(self.input.year_range)), p.fit)
+                                p.fit.calcYear(query_input.profile[aminoAcid],
+                                               calcYear(self.input.year_range)), p.fit)
         self.find_best_match()
 
     def add_result(self, clade, region, aminoAcid, year, fit):
@@ -77,6 +59,8 @@ class Query:
             total = 0
             total_weights = 0
             for aminoAcid in profile:
+                if abs(profile[aminoAcid]) == float('inf'):  # skip inf
+                    continue
                 weight = self.fits[(clade, region)][aminoAcid].r
                 total_weights += weight
                 total += profile[aminoAcid] * weight
@@ -85,6 +69,8 @@ class Query:
             # then calculate weighted stdev
             weighted_square_sum = 0
             for aminoAcid in profile:
+                if abs(profile[aminoAcid]) == float('inf'):  # skip inf
+                    continue
                 r2 = self.fits[(clade, region)][aminoAcid].r
                 percent = self.input.profile[aminoAcid]
                 weight = r2 ** 2 * percent
@@ -101,12 +87,30 @@ class Query:
                 sum += (profile[aminoAcid] - mean) ** 2
             return (sum / (len(profile) - 1)) ** .5
 
+        def calc_best_matching_year(profile, clade, region):
+
+            # weighted sum and number of year entries
+            weighted_year_sum = 0
+            weighted_year_num = 0
+            for aminoAcid in profile:
+                if abs(profile[aminoAcid]) == float('inf'):  # skip inf
+                    continue
+                r2 = self.fits[(clade, region)][aminoAcid].r
+                percent = self.input.profile[aminoAcid]
+                weight = r2 ** 2 * percent
+                weighted_year_sum += weight * profile[aminoAcid]
+                weighted_year_num += weight
+
+            return weighted_year_sum / weighted_year_num
+
         score = sys.float_info.max
         for clade, region in self.results:
             profileDict = self.results[(clade, region)]
             # cur_score = calc_stdev(profileDict)
             cur_score = clac_r2_weighted_stdev(profileDict, clade, region)
+            cur_best_match_year = calc_best_matching_year(profileDict, clade, region)
             self.scores[(clade, region)] = cur_score
+            self.best_match_years[(clade, region)] = cur_best_match_year
             if cur_score < score:
                 score = cur_score
                 self.best_fit_clade = clade
@@ -126,21 +130,22 @@ class Query:
         all_rows.append(['clade:', self.input.clade.value])
         all_rows.append(['region:', self.input.region.value])
         all_rows.append(['period', self.input.year_range])
-        all_rows.append(['', ''] + amino_acids_list)
-        query_row = ['query', '']
+        all_rows.append(['', '', '', ''] + amino_acids_list)
+        query_row = ['query', '', '','']
         for aminoAcid in AminoAcid:
             query_row.append(self.input.profile[aminoAcid])
         all_rows.append(query_row)
         all_rows.append([])
 
         # calculated year, stdev, and fit parameters
-        all_rows.append(['', 'stdev'] + amino_acids_list)
+        all_rows.append(['', 'stdev', 'best match year', ''] + amino_acids_list)
+        print(len(self.results))
         for clade, region in self.results:
             row_collection = [
-                [clade.value + ", " + region.value, self.scores[clade, region]],
-                ['slope', ''],
-                ['y_intercept', ''],
-                ['r', ''],
+                [clade.value + ", " + region.value, self.scores[clade, region], self.best_match_years[clade, region], ''],
+                ['slope', '', '', ''],
+                ['y_intercept', '', '', ''],
+                ['r', '', '',''],
                 []
             ]
             for aminoAcid in AminoAcid:
@@ -171,7 +176,7 @@ class Query:
         # put all other profiles into the list of rows to be written
         all_rows.append([])
         all_rows.append(['other profiles in the same period'])
-        all_rows.append(['', ''] + amino_acids_list)
+        all_rows.append(['', '', ''] + amino_acids_list)
         for clade, region in all_other_profiles:
             profile = all_other_profiles[(clade, region)]
             percentage_row = [clade.value + ", " + region.value, '']
@@ -187,7 +192,7 @@ class Query:
 
 if __name__ == '__main__':
     allProfiles = get_all_profiles(sys.argv[1])
-    input = QueryInput(queryProfile, 295, '[2000, 2004]', Clade.B, Region.EU)
+    input = QueryInput(query_profile_B_EU_448_00_to_04, 448, '[2000, 2004]', Clade.B, Region.EU)
     query = Query(input, allProfiles)
     print(query.best_fit_clade)
     print(query.best_fit_region)
