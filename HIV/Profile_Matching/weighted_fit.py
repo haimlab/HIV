@@ -1,19 +1,16 @@
-import csv
 import numpy as np
 import pylab
-import sys
-import os
-from copy import deepcopy
 from scipy.optimize import curve_fit
 from math import log10
 from math import exp
-from constants import Clade
-from constants import Region
-from constants import AminoAcid
-from constants import FilterProperties
 
+
+# add calculation of fit
 
 # object to hold a fit result
+from file_parse import get_all_profiles
+
+
 class FitResult:
     def __init__(self, slope, y_intercept, r):
         self.y_intercept = y_intercept
@@ -29,79 +26,6 @@ class FitResult:
                 return default_year
             else:
                 return float('inf')
-
-# object to hold a single distribution profile
-class Profile:
-    def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
-        self.aminoAcid = aminoAcid # a single amino acid
-        self.clade = clade
-        self.region = region
-        self.years = years
-        self.distr = distr # percentages, in same order as years
-        self.numIso = numIso # #isolates, in same order as years
-        self.position = position
-        self.fit = None # a fit object
-        self.mostSimilar = None # another profile with minimal euc dist
-
-    # renove data points that have 0 isolates
-    def remove_0_isolates(self):
-        index = 0
-        while index < len(self.numIso):
-            if self.numIso[index] == 0:
-                del self.numIso[index]
-                del self.years[index]
-                del self.distr[index]
-                continue
-            index += 1
-
-    # generate a string to identify this profile
-    def tag(self):
-        components = [self.clade.value, self.region.value, self.aminoAcid.value]
-        return "_".join(components)
-
-
-# object to hold all profiles and a filtering method
-class AllProfiles:
-    def __init__(self):
-        self.profiles = []
-
-    def add_profile(self, profile):
-        self.profiles.append(profile)
-
-    def __filterBy(self, value, property):
-        filteredProfiles = AllProfiles()
-        for p in self.profiles:
-            if property == FilterProperties.AMINOACID:
-                curValue = p.aminoAcid
-            elif property == FilterProperties.CLADE:
-                curValue = p.clade
-            elif property == FilterProperties.POSITION:
-                curValue = p.position
-            elif property == FilterProperties.REGION:
-                curValue = p.region
-            else:
-                raise Exception('Unidentified filter property')
-            if curValue == value:
-                filteredProfiles.add_profile(p)
-        return filteredProfiles
-
-
-    # filter the profiles according to given criteria
-    # returns a result also as AllProfiles instance, so chained filtering can be applied
-    def filter(self, clade=None, region=None, aminoAcid=None, position=None):
-
-        # do the filtering
-        filtered = self
-        if clade is not None:
-            filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
-        if region is not None:
-            filtered = filtered.__filterBy(region, FilterProperties.REGION)
-        if aminoAcid is not None:
-            filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
-        if position is not None:
-            filtered = filtered.__filterBy(position, FilterProperties.POSITION)
-
-        return filtered
 
 
 # calculate r square value of a linear regression, referencing following site
@@ -147,7 +71,6 @@ def calcFit(profile):
 
     profile.remove_0_isolates()
 
-
     # to avoid float number round off errors, manually check if all data points are same
     # and assign slope = 0, y_intercept = any data point value, and r square = 1 (perfect fit)
     if checkEqual(profile.distr):
@@ -162,69 +85,6 @@ def calcFit(profile):
     profile.fit = FitResult(params[0], params[1], r_squared)
 
 
-# calculate year as median of the range
-# assumes input string to look like "[year1, year2]" with year1 < year2
-def calcYear(yearRange):
-    commaInd = yearRange.find(',')
-    year1 = int(yearRange[1:commaInd])
-    year2 = int(yearRange[commaInd + 2:-1])
-    return (year1 + year2) / 2
-
-
-# get clade, country, position and return as according enums
-def parseFileName(fileName):
-    fileName = fileName[fileName.rfind('\\') + 1:]
-    [clade, region, position] = fileName.split('_')
-    position = int(position[:position.rfind('.')]) # remove file extension
-    return Clade(clade), Region(region), position
-
-
-# read a file for a clade-region combination into profile instances
-def read(fileName):
-
-    allProfiles = []
-    clade, region, position = parseFileName(fileName)
-
-    with open(fileName) as file:
-        reader = csv.reader(file)
-
-        # read in years
-        firstRow = next(reader)
-        years = []
-        for i in range(1, len(firstRow)):
-            years.append(calcYear(firstRow[i]))
-
-        # read in #isolates
-        secondRow = next(reader)
-        numIso = []
-        for i in range(1, len(secondRow)):
-            numIso.append(int(secondRow[i]))
-
-        # read in remaining rows
-        for row in reader:
-            aminoAcid = AminoAcid(row[0])
-            distr = []
-            for i in range(1, len(row)):
-                distr.append(float(row[i]))
-            profile = Profile(aminoAcid, clade, region, distr, deepcopy(numIso), deepcopy(years), position)
-            allProfiles.append(profile)
-
-    return allProfiles
-
-
-def get_all_profiles(folderName):
-    rawFileNames = os.listdir(folderName)
-    fileNames = [os.path.join(folderName, fileName) for fileName in rawFileNames]
-    profiles = []
-    for fileName in fileNames:
-        profiles += read(fileName)
-    for p in profiles:
-        calcFit(p)
-    allProfiles = AllProfiles()
-    allProfiles.profiles = profiles
-    return allProfiles
-
-
 # calculate euclidean distance, Prof. Haim's approach, p1 and p2 are profiles
 def euclideanDist(p1, p2):
 
@@ -234,18 +94,18 @@ def euclideanDist(p1, p2):
     logiFunc = lambda x: L / (1 + exp(k * (x - x_0)))  # logistic function
     logConvert = lambda x: 0 if x == 0 else log10(x) + 1  # log convert
     combinedFunc = lambda x: logiFunc(logConvert(x))  # combined logistic and log
-    
+
     # apply transform to data, then square them
-    p1 = [combinedFunc(i) for i in p1.distr] 
+    p1 = [combinedFunc(i) for i in p1.distr]
     p2 = [combinedFunc(i) for i in p2.distr]
-    
+
     # compute euclidean distances
     eucDist = lambda x, y: sum([(a - b) ** 2 for a, b in zip(p1, p2)]) ** .5
     return eucDist(p1, p2)
 
 
 def main():
-    all_profiles = get_all_profiles(sys.argv[1])
+    all_profiles = get_all_profiles()
     p = all_profiles.profiles[2]
     x = p.years
     yexact = p.distr

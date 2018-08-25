@@ -1,15 +1,9 @@
 import sys
 import csv
-from constants import AminoAcid
-from constants import query_profile_B_EU_295_00_to_04
-from constants import query_profile_B_EU_332_00_to_04
-from constants import query_profile_B_EU_339_00_to_04
-from constants import query_profile_B_EU_392_00_to_04
-from constants import query_profile_B_EU_448_00_to_04
-from constants import Clade
-from constants import Region
-from weighted_fit import get_all_profiles
-from weighted_fit import calcYear
+import constants
+from file_parse import get_all_profiles, calcYear
+from weighted_fit import calcFit
+
 
 # temporary hard-coded inputs
 
@@ -117,12 +111,11 @@ class Query:
                 self.best_fit_region = region
         return self.best_fit_clade, self.best_fit_region
 
-
     # write intermediate results for verfication purposes
     def write_intermediate_results(self, fileName):
         all_rows = []
         amino_acids_list = []
-        for aminoAcid in AminoAcid:
+        for aminoAcid in constants.AminoAcid:
             amino_acids_list.append(aminoAcid.value)
 
         # query rows
@@ -132,7 +125,7 @@ class Query:
         all_rows.append(['period', self.input.year_range])
         all_rows.append(['', '', '', ''] + amino_acids_list)
         query_row = ['query', '', '','']
-        for aminoAcid in AminoAcid:
+        for aminoAcid in constants.AminoAcid:
             query_row.append(self.input.profile[aminoAcid])
         all_rows.append(query_row)
         all_rows.append([])
@@ -148,7 +141,7 @@ class Query:
                 ['r', '', '',''],
                 []
             ]
-            for aminoAcid in AminoAcid:
+            for aminoAcid in constants.AminoAcid:
                 row_collection[0].append(self.results[(clade, region)][aminoAcid])
                 row_collection[1].append(self.fits[(clade, region)][aminoAcid].slope)
                 row_collection[2].append(self.fits[(clade, region)][aminoAcid].y_intercept)
@@ -180,7 +173,7 @@ class Query:
         for clade, region in all_other_profiles:
             profile = all_other_profiles[(clade, region)]
             percentage_row = [clade.value + ", " + region.value, '']
-            for amino_acid in AminoAcid:
+            for amino_acid in constants.AminoAcid:
                 percentage_row.append(profile[amino_acid])
             all_rows.append(percentage_row)
 
@@ -191,9 +184,11 @@ class Query:
 
 
 if __name__ == '__main__':
-    allProfiles = get_all_profiles(sys.argv[1])
-    input = QueryInput(query_profile_B_EU_448_00_to_04, 448, '[2000, 2004]', Clade.B, Region.EU)
-    query = Query(input, allProfiles)
+    allProfiles = get_all_profiles()
+    for p in allProfiles.profiles:
+        calcFit(p)
+    query_input = QueryInput(constants.query_profile_B_EU_448_00_to_04, 448, '[2000, 2004]', constants.Clade.B, constants.Region.EU)
+    query = Query(query_input, allProfiles)
     print(query.best_fit_clade)
     print(query.best_fit_region)
-    query.write_intermediate_results(sys.argv[2])
+    query.write_intermediate_results(sys.argv[1])
