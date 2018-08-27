@@ -58,7 +58,7 @@ class FilterProperties(Enum):
     AMINOACID = 'AMINOACID'
 
 
-query_profile_B_EU_295_00_to_04 = {  # B EU 295 2000 - 2004
+query_profile_B_EU_295_00_to_04 = {
     AminoAcid('Z'): 78.5,
     AminoAcid('N'): 3.57,
     AminoAcid('T'): 5.35,
@@ -83,7 +83,7 @@ query_profile_B_EU_295_00_to_04 = {  # B EU 295 2000 - 2004
 }
 
 
-query_profile_B_EU_332_00_to_04 = {  # B EU 295 2000 - 2004
+query_profile_B_EU_332_00_to_04 = {
     AminoAcid('Z'): 87.23,
     AminoAcid('N'): 1.82,
     AminoAcid('T'): 9.09,
@@ -108,7 +108,7 @@ query_profile_B_EU_332_00_to_04 = {  # B EU 295 2000 - 2004
 }
 
 
-query_profile_B_EU_339_00_to_04 = {  # B EU 295 2000 - 2004
+query_profile_B_EU_339_00_to_04 = {
     AminoAcid('Z'): 67.23,
     AminoAcid('N'): 9.09,
     AminoAcid('T'): 0,
@@ -133,7 +133,7 @@ query_profile_B_EU_339_00_to_04 = {  # B EU 295 2000 - 2004
 }
 
 
-query_profile_B_EU_392_00_to_04 = {  # B EU 295 2000 - 2004
+query_profile_B_EU_392_00_to_04 = {
     AminoAcid('Z'): 81.82,
     AminoAcid('N'): 7.23,
     AminoAcid('T'): 0,
@@ -158,7 +158,7 @@ query_profile_B_EU_392_00_to_04 = {  # B EU 295 2000 - 2004
 }
 
 
-query_profile_B_EU_448_00_to_04 = {  # B EU 295 2000 - 2004
+query_profile_B_EU_448_00_to_04 = {
     AminoAcid('Z'): 89.09,
     AminoAcid('N'): 0,
     AminoAcid('T'): 1.82,
@@ -171,6 +171,131 @@ query_profile_B_EU_448_00_to_04 = {  # B EU 295 2000 - 2004
     AminoAcid('Y'): 0,
     AminoAcid('Q'): 0,
     AminoAcid('I'): 0,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0,
+    AminoAcid('A'): 0,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0,
+    AminoAcid('M'): 0,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0,
+}
+
+
+query_profile_B_NA_295_00_to_04 = {
+    AminoAcid('Z'): 83.59,
+    AminoAcid('N'): 2.56,
+    AminoAcid('T'): 7.18,
+    AminoAcid('S'): 1.54,
+    AminoAcid('D'): 1.03,
+    AminoAcid('E'): 0.51,
+    AminoAcid('K'): 1.54,
+    AminoAcid('R'): 0.51,
+    AminoAcid('H'): 0.51,
+    AminoAcid('Y'): 0,
+    AminoAcid('Q'): 0,
+    AminoAcid('I'): 1.03,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0,
+    AminoAcid('A'): 0,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0,
+    AminoAcid('M'): 0,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0,
+}
+
+
+query_profile_B_NA_332_00_to_04 = {
+    AminoAcid('Z'): 83.59,
+    AminoAcid('N'): 3.01,
+    AminoAcid('T'): 10.26,
+    AminoAcid('S'): 0.51,
+    AminoAcid('D'): 0.51,
+    AminoAcid('E'): 0.51,
+    AminoAcid('K'): 0,
+    AminoAcid('R'): 0,
+    AminoAcid('H'): 0,
+    AminoAcid('Y'): 0,
+    AminoAcid('Q'): 0,
+    AminoAcid('I'): 1.03,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0.51,
+    AminoAcid('A'): 0,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0,
+    AminoAcid('M'): 0,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0,
+}
+
+
+query_profile_B_NA_339_00_to_04 = {
+    AminoAcid('Z'): 69.74,
+    AminoAcid('N'): 3.08,
+    AminoAcid('T'): 4.62,
+    AminoAcid('S'): 1.03,
+    AminoAcid('D'): 2.05,
+    AminoAcid('E'): 7.18,
+    AminoAcid('K'): 5.64,
+    AminoAcid('R'): 2.05,
+    AminoAcid('H'): 1.03,
+    AminoAcid('Y'): 0.51,
+    AminoAcid('Q'): 0.51,
+    AminoAcid('I'): 0,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0,
+    AminoAcid('A'): 0.51,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0.51,
+    AminoAcid('M'): 1.03,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0.51,
+}
+
+
+query_profile_B_NA_392_00_to_04 = {
+    AminoAcid('Z'): 82.55,
+    AminoAcid('N'): 6.67,
+    AminoAcid('T'): 2.56,
+    AminoAcid('S'): 4.1,
+    AminoAcid('D'): 2.05,
+    AminoAcid('E'): 0,
+    AminoAcid('K'): 1.03,
+    AminoAcid('R'): 0,
+    AminoAcid('H'): 0.51,
+    AminoAcid('Y'): 0.51,
+    AminoAcid('Q'): 0,
+    AminoAcid('I'): 0,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0,
+    AminoAcid('A'): 0,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0,
+    AminoAcid('M'): 0,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0,
+}
+
+
+query_profile_B_NA_448_00_to_04 = {
+    AminoAcid('Z'): 91.28,
+    AminoAcid('N'): 0,
+    AminoAcid('T'): 0,
+    AminoAcid('S'): 2.56,
+    AminoAcid('D'): 0,
+    AminoAcid('E'): 1.03,
+    AminoAcid('K'): 2.56,
+    AminoAcid('R'): 0,
+    AminoAcid('H'): 0,
+    AminoAcid('Y'): 0.51,
+    AminoAcid('Q'): 0.51,
+    AminoAcid('I'): 1.54,
     AminoAcid('L'): 0,
     AminoAcid('V'): 0,
     AminoAcid('A'): 0,

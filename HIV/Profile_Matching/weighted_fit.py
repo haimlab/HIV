@@ -1,13 +1,6 @@
 import numpy as np
 import pylab
 from scipy.optimize import curve_fit
-from math import log10
-from math import exp
-
-
-# add calculation of fit
-
-# object to hold a fit result
 from file_parse import get_all_profiles
 
 
@@ -83,9 +76,6 @@ def calcFit(profile):
                                 profile.distr, sigma=sigmas, absolute_sigma=False)
         r_squared = calc_r_squared(params[0], params[1], profile.years, profile.distr)
     profile.fit = FitResult(params[0], params[1], r_squared)
-
-
-
 
 
 def main():
