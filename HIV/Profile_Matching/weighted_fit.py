@@ -85,23 +85,7 @@ def calcFit(profile):
     profile.fit = FitResult(params[0], params[1], r_squared)
 
 
-# calculate euclidean distance, Prof. Haim's approach, p1 and p2 are profiles
-def euclideanDist(p1, p2):
 
-    L = 100
-    k = -1.2
-    x_0 = 5
-    logiFunc = lambda x: L / (1 + exp(k * (x - x_0)))  # logistic function
-    logConvert = lambda x: 0 if x == 0 else log10(x) + 1  # log convert
-    combinedFunc = lambda x: logiFunc(logConvert(x))  # combined logistic and log
-
-    # apply transform to data, then square them
-    p1 = [combinedFunc(i) for i in p1.distr]
-    p2 = [combinedFunc(i) for i in p2.distr]
-
-    # compute euclidean distances
-    eucDist = lambda x, y: sum([(a - b) ** 2 for a, b in zip(p1, p2)]) ** .5
-    return eucDist(p1, p2)
 
 
 def main():
@@ -118,6 +102,5 @@ def main():
     pylab.show()
 
 
-# actual main
 if __name__ == '__main__':
     main()

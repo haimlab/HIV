@@ -50,15 +50,15 @@ class AllProfiles:
 
 class Profile:
     def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
-        self.aminoAcid = aminoAcid # a single amino acid
+        self.aminoAcid = aminoAcid  # a single amino acid
         self.clade = clade
         self.region = region
         self.years = years
-        self.distr = distr # percentages, in same order as years
-        self.numIso = numIso # #isolates, in same order as years
+        self.distr = distr  # percentages, in same order as years
+        self.numIso = numIso  # #isolates, in same order as years
         self.position = position
-        self.fit = None # a fit object
-        self.mostSimilar = None # another profile with minimal euc dist
+        self.fit = None  # a fit object
+        self.mostSimilar = None  # another profile with minimal euc dist
 
     # renove data points that have 0 isolates
     def remove_0_isolates(self):
