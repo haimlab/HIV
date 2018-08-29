@@ -150,7 +150,10 @@ class Query:
         # write all other profiles that shared the same period with query
         period = calcYear(self.input.year_range)
         all_other_profiles = {}  # {(clade, region) -> {AminoAcid -> percentage}}
-        for profile in self.all_profiles.profiles:
+        # for profile in self.all_profiles.profiles:
+        all_profiles = get_all_dynamic_profiles()
+        all_profiles = all_profiles.filter(position=self.input.position)
+        for profile in all_profiles.profiles:
             key = profile.clade, profile.region
             amino_acid = profile.aminoAcid
             percentage = None
@@ -184,7 +187,7 @@ if __name__ == '__main__':
     allProfiles = get_all_dynamic_profiles()
     for p in allProfiles.profiles:
         calcFit(p)
-    query_input = QueryInput(constants.query_profile_B_NA_448_00_to_04, 448, '[2000, 2004]', constants.Clade.B, constants.Region.NA)
+    query_input = QueryInput(constants.query_profile_B_NA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.B, constants.Region.NA)
     query = Query(query_input, allProfiles)
     print(query.best_fit_clade)
     print(query.best_fit_region)
