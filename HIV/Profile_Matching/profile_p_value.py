@@ -51,7 +51,6 @@ def quantify_distance(centroids, all_profiles):
                 p = {}
 
 
-
 def main():
 
     # get starting data

@@ -1,7 +1,7 @@
 import numpy as np
 import pylab
 from scipy.optimize import curve_fit
-from file_parse import get_all_profiles
+from file_parse import get_all_dynamic_profiles
 
 
 class FitResult:
@@ -18,7 +18,7 @@ class FitResult:
             if percent == self.y_intercept:
                 return default_year
             else:
-                return float('inf')
+                return 2100
 
 
 # calculate r square value of a linear regression, referencing following site
@@ -79,7 +79,7 @@ def calcFit(profile):
 
 
 def main():
-    all_profiles = get_all_profiles()
+    all_profiles = get_all_dynamic_profiles()
     p = all_profiles.profiles[2]
     x = p.years
     yexact = p.distr

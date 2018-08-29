@@ -1,9 +1,49 @@
 import csv
-import os
 from copy import deepcopy
 from constants import FilterProperties, Clade, Region, AminoAcid
+from os.path import join
+from os import listdir
 
+AMINO_ACID = 0
+PERCENTAGE = 1
 DATA_FOLDER_NAME = 'data'
+
+
+class AllStaticProfiles:
+    def __init(self):
+        self.__profiles = {} # clade -> profile -> region
+        # TODO initialize dictionary entries
+
+
+class StaticProfile:
+    def __init__(self, clade, position, region):
+        if not isinstance(clade, Clade):
+            clade = Clade(clade)
+        if not isinstance(region, Region):
+            region = Region(region)
+        self.__clade = clade
+        self.__position = position
+        self.__region = region
+        self.__distribution = {}
+
+    def clade(self):
+        return self.clade
+
+    def position(self):
+        return self.position
+
+    def region(self):
+        return self.region
+
+    def add_dist(self, amino_acid, percent):
+        if not isinstance(amino_acid, AminoAcid):
+            amino_acid = AminoAcid(amino_acid)
+        self.__distribution[amino_acid] = percent
+
+    def get_distr(self, amino_acid):
+        if not isinstance(amino_acid, AminoAcid):
+            amino_acid = AminoAcid(amino_acid)
+        return self.__distribution[amino_acid]
 
 
 class AllProfiles:
@@ -48,7 +88,7 @@ class AllProfiles:
         return filtered
 
 
-class Profile:
+class DynamicProfile:
     def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
         self.aminoAcid = aminoAcid  # a single amino acid
         self.clade = clade
@@ -78,7 +118,7 @@ class Profile:
 
 
 # get clade, country, position and return as according enums
-def parseFileName(fileName):
+def parse_file_name(fileName):
     fileName = fileName[fileName.rfind('\\') + 1:]
     [clade, region, position] = fileName.split('_')
     position = int(position[:position.rfind('.')])  # remove file extension
@@ -89,7 +129,7 @@ def parseFileName(fileName):
 def read(fileName):
 
     allProfiles = []
-    clade, region, position = parseFileName(fileName)
+    clade, region, position = parse_file_name(fileName)
 
     with open(fileName) as file:
         reader = csv.reader(file)
@@ -112,22 +152,36 @@ def read(fileName):
             distr = []
             for i in range(1, len(row)):
                 distr.append(float(row[i]))
-            profile = Profile(aminoAcid, clade, region, distr, deepcopy(numIso), deepcopy(years), position)
+            profile = DynamicProfile(aminoAcid, clade, region, distr, deepcopy(numIso), deepcopy(years), position)
             allProfiles.append(profile)
 
     return allProfiles
 
 
 # read profiles stored in files
-def get_all_profiles():
-    rawFileNames = os.listdir(DATA_FOLDER_NAME)
-    fileNames = [os.path.join(DATA_FOLDER_NAME, fileName) for fileName in rawFileNames]
+def get_all_dynamic_profiles():
+    fns = [join(DATA_FOLDER_NAME, fn) for fn in listdir(DATA_FOLDER_NAME)]
     profiles = []
-    for fileName in fileNames:
+    for fileName in fns:
         profiles += read(fileName)
     allProfiles = AllProfiles()
     allProfiles.profiles = profiles
     return allProfiles
+
+
+def get_all_static_profiles():
+    fns = [join(DATA_FOLDER_NAME, fn) for fn in listdir(DATA_FOLDER_NAME)]
+    profiles = []
+
+
+def get_single_static_profile(file_name):
+    clade, region, position = parse_file_name(file_name)
+    profile = StaticProfile(clade, position, region)
+    with open(file_name) as file:
+        reader = csv.reader(file)
+        for row in reader:
+            profile.add_dist(row[AMINO_ACID], row[PERCENTAGE])
+    return profile
 
 
 # calculate year as median of the range

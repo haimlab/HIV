@@ -1,11 +1,8 @@
 import sys
 import csv
 import constants
-from file_parse import get_all_profiles, calcYear
+from file_parse import get_all_dynamic_profiles, calcYear
 from weighted_fit import calcFit
-
-
-# temporary hard-coded inputs
 
 
 class QueryInput:
@@ -184,10 +181,10 @@ class Query:
 
 
 if __name__ == '__main__':
-    allProfiles = get_all_profiles()
+    allProfiles = get_all_dynamic_profiles()
     for p in allProfiles.profiles:
         calcFit(p)
-    query_input = QueryInput(constants.query_profile_B_EU_448_00_to_04, 448, '[2000, 2004]', constants.Clade.B, constants.Region.EU)
+    query_input = QueryInput(constants.query_profile_B_NA_448_00_to_04, 448, '[2000, 2004]', constants.Clade.B, constants.Region.NA)
     query = Query(query_input, allProfiles)
     print(query.best_fit_clade)
     print(query.best_fit_region)
