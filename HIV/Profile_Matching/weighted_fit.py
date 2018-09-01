@@ -71,7 +71,7 @@ def calcFit(profile):
         r_squared = 1
     else:
         # calculate fit parameters
-        sigmas = np.array([1 / n ** .5 for n in profile.numIso]) # weights
+        sigmas = np.array([1 / n ** .5 for n in profile.numIso])  # weights
         params, cov = curve_fit(lambda x, a, b: a * x + b, profile.years,
                                 profile.distr, sigma=sigmas, absolute_sigma=False)
         r_squared = calc_r_squared(params[0], params[1], profile.years, profile.distr)

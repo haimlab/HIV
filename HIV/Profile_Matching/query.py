@@ -28,10 +28,12 @@ class Query:
         all_profiles = all_profiles.filter(position=self.input.position)
         for aminoAcid in self.input.profile:
             sub_profiles = all_profiles.filter(aminoAcid=aminoAcid)
-            for p in sub_profiles.profiles:
-                self.add_result(p.clade, p.region, aminoAcid,
+            for p in sub_profiles.get_all_profiles():
+                if p.fit is None:
+                    print(p.tag())
+                self.add_result(p.clade(), p.region(), aminoAcid,
                                 p.fit.calcYear(query_input.profile[aminoAcid],
-                                               calcYear(self.input.year_range)), p.fit)
+                                calcYear(self.input.year_range)), p.fit)
         self.find_best_match()
 
     def add_result(self, clade, region, aminoAcid, year, fit):
@@ -150,9 +152,9 @@ class Query:
         # write all other profiles that shared the same period with query
         period = calcYear(self.input.year_range)
         all_other_profiles = {}  # {(clade, region) -> {AminoAcid -> percentage}}
-        for profile in self.all_profiles.profiles:
-            key = profile.clade, profile.region
-            amino_acid = profile.aminoAcid
+        for profile in self.all_profiles.get_all_profiles():
+            key = profile.clade(), profile.region()
+            amino_acid = profile.amino_acid()
             percentage = None
             for i in range(0, len(profile.years)):
                 if profile.years[i] == period:
@@ -182,10 +184,15 @@ class Query:
 
 if __name__ == '__main__':
     allProfiles = get_all_dynamic_profiles()
-    for p in allProfiles.profiles:
+    print(len(allProfiles.get_all_profiles()))
+    for p in allProfiles.get_all_profiles():
         calcFit(p)
+    for p in allProfiles.get_all_profiles():
+        print('inside main:' + str(p.fit is not None))
+
     query_input = QueryInput(constants.query_profile_B_NA_448_00_to_04, 448, '[2000, 2004]', constants.Clade.B, constants.Region.NA)
     query = Query(query_input, allProfiles)
+
     print(query.best_fit_clade)
     print(query.best_fit_region)
     query.write_intermediate_results(sys.argv[1])

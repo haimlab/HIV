@@ -9,10 +9,84 @@ PERCENTAGE = 1
 DATA_FOLDER_NAME = 'data'
 
 
+class Profile:
+    """ abstract generic class for static and dynamic profiles """
+
+    def __init__(self, clade, region, position):
+        if not isinstance(clade, Clade):
+            clade = Clade(clade)
+        if not isinstance(region, Region):
+            region = Region(region)
+        self.__clade = clade
+        self.__position = position
+        self.__region = region
+
+    def clade(self):
+        return self.__clade
+
+    def position(self):
+        return self.__position
+
+    def region(self):
+        return self.__region
+
+
+class AllProfiles:
+    """ generic abstract class for static and dynamic profile managers """
+
+    def __init__(self):
+        self.__all_profs = []
+
+    def __filterBy(self, value, prop):
+
+        filtered_profs = deepcopy(self)
+        index = 0
+        while index < len(filtered_profs.__all_profs):
+            p = filtered_profs.__all_profs[index]
+            if prop == FilterProperties.AMINOACID:
+                curValue = p.amino_acid()
+            elif prop == FilterProperties.CLADE:
+                curValue = p.clade()
+            elif prop == FilterProperties.POSITION:
+                curValue = p.position
+            elif prop == FilterProperties.REGION:
+                curValue = p.region()
+            else:
+                raise Exception('Unidentified filter property')
+            if curValue != value:
+                del filtered_profs.__all_profs[index]
+                continue
+            index += 1
+        return filtered_profs
+
+        # filter the profiles according to given criteria
+        # returns a result also as AllProfiles instance, so chained filtering can be applied
+
+    def filter(self, clade=None, region=None, aminoAcid=None, position=None):
+        filtered = self
+        if clade is not None:
+            filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
+        if region is not None:
+            filtered = filtered.__filterBy(region, FilterProperties.REGION)
+        if aminoAcid is not None:
+            filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
+        if position is not None:
+            filtered = filtered.__filterBy(position, FilterProperties.POSITION)
+        return filtered
+
+    def add_profile(self, prof):
+        self.__all_profs.append(prof)
+
+    def get_all_profiles(self):
+        return self.__all_profs
+
+
 class AllStaticProfiles:
-    def __init(self):
-        self.__profiles = {} # clade -> profile -> region
-        # TODO initialize dictionary entries
+    def __init__(self):
+        self.__profiles = []  # list of static profile instances
+
+    def add_profile(self, prof):
+        self.__profiles.append(prof)
 
 
 class StaticProfile:
@@ -24,7 +98,7 @@ class StaticProfile:
         self.__clade = clade
         self.__position = position
         self.__region = region
-        self.__distribution = {}
+        self.__distribution = {}  # amino acid -> percent
 
     def clade(self):
         return self.clade
@@ -46,53 +120,15 @@ class StaticProfile:
         return self.__distribution[amino_acid]
 
 
-class AllProfiles:
+class AllDynamicProfiles(AllProfiles):
     def __init__(self):
-        self.profiles = []
-
-    def add_profile(self, profile):
-        self.profiles.append(profile)
-
-    def __filterBy(self, value, property):
-        filteredProfiles = AllProfiles()
-        for p in self.profiles:
-            if property == FilterProperties.AMINOACID:
-                curValue = p.aminoAcid
-            elif property == FilterProperties.CLADE:
-                curValue = p.clade
-            elif property == FilterProperties.POSITION:
-                curValue = p.position
-            elif property == FilterProperties.REGION:
-                curValue = p.region
-            else:
-                raise Exception('Unidentified filter property')
-            if curValue == value:
-                filteredProfiles.add_profile(p)
-        return filteredProfiles
-
-    # filter the profiles according to given criteria
-    # returns a result also as AllProfiles instance, so chained filtering can be applied
-    def filter(self, clade=None, region=None, aminoAcid=None, position=None):
-
-        # do the filtering
-        filtered = self
-        if clade is not None:
-            filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
-        if region is not None:
-            filtered = filtered.__filterBy(region, FilterProperties.REGION)
-        if aminoAcid is not None:
-            filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
-        if position is not None:
-            filtered = filtered.__filterBy(position, FilterProperties.POSITION)
-
-        return filtered
+        super().__init__()
 
 
-class DynamicProfile:
+class DynamicProfile(Profile):
     def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
-        self.aminoAcid = aminoAcid  # a single amino acid
-        self.clade = clade
-        self.region = region
+        super().__init__(clade, region, position)
+        self.__aminoAcid = aminoAcid  # a single amino acid
         self.years = years
         self.distr = distr  # percentages, in same order as years
         self.numIso = numIso  # #isolates, in same order as years
@@ -113,8 +149,11 @@ class DynamicProfile:
 
     # generate a string to identify this profile
     def tag(self):
-        components = [self.clade.value, self.region.value, self.aminoAcid.value]
+        components = [self.clade().value, self.region().value, self.amino_acid().value]
         return "_".join(components)
+
+    def amino_acid(self):
+        return self.__aminoAcid
 
 
 # get clade, country, position and return as according enums
@@ -126,7 +165,7 @@ def parse_file_name(fileName):
 
 
 # read a file for a clade-region combination into profile instances
-def read(fileName):
+def read_dynamic(fileName):
 
     allProfiles = []
     clade, region, position = parse_file_name(fileName)
@@ -161,20 +200,23 @@ def read(fileName):
 # read profiles stored in files
 def get_all_dynamic_profiles():
     fns = [join(DATA_FOLDER_NAME, fn) for fn in listdir(DATA_FOLDER_NAME)]
-    profiles = []
+    all_profs = AllDynamicProfiles()
     for fileName in fns:
-        profiles += read(fileName)
-    allProfiles = AllProfiles()
-    allProfiles.profiles = profiles
-    return allProfiles
+        profs = read_dynamic(fileName)
+        for p in profs:
+            all_profs.add_profile(p)
+    return all_profs
 
 
 def get_all_static_profiles():
     fns = [join(DATA_FOLDER_NAME, fn) for fn in listdir(DATA_FOLDER_NAME)]
-    profiles = []
+    all_profiles = AllStaticProfiles()
+    for fn in fns:
+        all_profiles.add_profile(read_static(fn))
+    return all_profiles
 
 
-def get_single_static_profile(file_name):
+def read_static(file_name):
     clade, region, position = parse_file_name(file_name)
     profile = StaticProfile(clade, position, region)
     with open(file_name) as file:
