@@ -3,6 +3,7 @@ import csv
 import constants
 from file_parse import get_all_dynamic_profiles, calcYear
 from weighted_fit import calcFit
+from os.path import join
 
 
 class QueryInput:
@@ -184,11 +185,21 @@ class Query:
 
 
 if __name__ == '__main__':
-    allProfiles = get_all_dynamic_profiles()
-    for p in allProfiles.profiles:
-        calcFit(p)
-    query_input = QueryInput(constants.query_profile_B_NA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.B, constants.Region.NA)
-    query = Query(query_input, allProfiles)
-    print(query.best_fit_clade)
-    print(query.best_fit_region)
-    query.write_intermediate_results(sys.argv[1])
+
+    query_inputs = [
+        QueryInput(constants.query_profile_B_NA_295_05_to_09, 295, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
+        QueryInput(constants.query_profile_B_NA_332_05_to_09, 332, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
+        QueryInput(constants.query_profile_B_NA_339_05_to_09, 339, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
+        QueryInput(constants.query_profile_B_NA_392_05_to_09, 392, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
+        QueryInput(constants.query_profile_B_NA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.B, constants.Region.NA)
+    ]
+
+    for query_input in query_inputs:
+        allProfiles = get_all_dynamic_profiles()
+        for p in allProfiles.profiles:
+            calcFit(p)
+        query = Query(query_input, allProfiles)
+        print(query.best_fit_clade)
+        print(query.best_fit_region)
+        file_name = join(sys.argv[1], str(query_input.position) + '_r2=0.1.csv')
+        query.write_intermediate_results(file_name)
