@@ -13,12 +13,17 @@ class FitResult:
     # calculate year based on percent
     def calcYear(self, percent, default_year):
         try:
-            return (percent - self.y_intercept) / self.slope
+            year = (percent - self.y_intercept) / self.slope
+            if year > 2115:
+                return 2115
+            if year < 1915:
+                return 1915
+            return year
         except ZeroDivisionError:
             if percent == self.y_intercept:
                 return default_year
             else:
-                return 2100
+                return 2115
 
 
 # calculate r square value of a linear regression, referencing following site
@@ -68,7 +73,7 @@ def calcFit(profile):
     # and assign slope = 0, y_intercept = any data point value, and r square = 1 (perfect fit)
     if checkEqual(profile.distr):
         params = [0, profile.distr[0]]
-        r_squared = 1
+        r_squared = 0.4
     else:
         # calculate fit parameters
         sigmas = np.array([1 / n ** .5 for n in profile.numIso]) # weights
