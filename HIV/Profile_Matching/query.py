@@ -165,7 +165,7 @@ class Query:
             except KeyError:
                 all_other_profiles[key] = {amino_acid: percentage}
 
-        # put all other profiles into the list of rows to be written
+        # put all other profiles into the list of rows to be writteqn
         all_rows.append([])
         all_rows.append(['other profiles in the same period'])
         all_rows.append(['', '', ''] + amino_acids_list)

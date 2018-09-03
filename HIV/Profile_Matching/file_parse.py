@@ -80,34 +80,36 @@ class AllProfiles:
     def get_all_profiles(self):
         return self.__all_profs
 
+    def attr_list(self, prop_type):
+        props = set()
+        for pf in self.get_all_profiles():
+            if prop_type == FilterProperties.CLADE:
+                prop = pf.clade()
+            elif prop_type == FilterProperties.POSITION:
+                prop = pf.position()
+            elif prop_type == FilterProperties.REGION:
+                prop = pf.region()
+            else:
+                raise Exception('not supported')
+            props.add(prop)
+        return list(props)
 
-class AllStaticProfiles:
+    def clade_list(self):
+        clades = set()
+        for prof in self.get_all_profiles():
+            clades.add(prof.clade)
+        return list(clades)
+
+
+class AllStaticProfiles(AllProfiles):
     def __init__(self):
-        self.__profiles = []  # list of static profile instances
-
-    def add_profile(self, prof):
-        self.__profiles.append(prof)
+        super().__init__()
 
 
-class StaticProfile:
+class StaticProfile(Profile):
     def __init__(self, clade, position, region):
-        if not isinstance(clade, Clade):
-            clade = Clade(clade)
-        if not isinstance(region, Region):
-            region = Region(region)
-        self.__clade = clade
-        self.__position = position
-        self.__region = region
+        super().__init__(clade, region, position)
         self.__distribution = {}  # amino acid -> percent
-
-    def clade(self):
-        return self.clade
-
-    def position(self):
-        return self.position
-
-    def region(self):
-        return self.region
 
     def add_dist(self, amino_acid, percent):
         if not isinstance(amino_acid, AminoAcid):
@@ -118,6 +120,12 @@ class StaticProfile:
         if not isinstance(amino_acid, AminoAcid):
             amino_acid = AminoAcid(amino_acid)
         return self.__distribution[amino_acid]
+
+    def get_entire_distr(self):
+        return deepcopy(self.__distribution)
+
+    def dim(self):
+        return self.__distribution.keys()
 
 
 class AllDynamicProfiles(AllProfiles):

@@ -1,5 +1,8 @@
 from enum import Enum
 
+# 2G12 and 2F5 positions
+Positions = [295, 332, 339, 392, 448, 662, 663, 664, 665, 667]
+
 
 # enumeration to represent regions
 class Region(Enum):
