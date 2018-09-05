@@ -4,10 +4,20 @@ from constants import FilterProperties, Clade, Region, AminoAcid
 from os.path import join
 from os import listdir
 from random import randint
+from math import log10
 
 AMINO_ACID = 0
 PERCENTAGE = 1
-DATA_FOLDER_NAME = 'data'
+DYNAMIC_DATA_FOLDER_NAME = 'data\\dynamic'
+STATIC_DATA_FOLDER_NAME = 'data\\static'
+LOG_ZERO_DEFAULT = 0.1
+
+
+def logConvert(val):
+    if val == 0:
+        return 0
+    else:
+        return log10(val) - log10(LOG_ZERO_DEFAULT)
 
 
 class Profile:
@@ -17,6 +27,9 @@ class Profile:
         if not isinstance(clade, Clade):
             clade = Clade(clade)
         if not isinstance(region, Region):
+            print(clade)
+            print(region)
+            print(position)
             region = Region(region)
         self.__clade = clade
         self.__position = position
@@ -48,16 +61,16 @@ class AllProfiles:
         while index < len(filtered_profs.__all_profs):
             p = filtered_profs.__all_profs[index]
             if prop == FilterProperties.AMINOACID:
-                curValue = p.amino_acid()
+                cur_value = p.amino_acid()
             elif prop == FilterProperties.CLADE:
-                curValue = p.clade()
+                cur_value = p.clade()
             elif prop == FilterProperties.POSITION:
-                curValue = p.position
+                cur_value = p.position()
             elif prop == FilterProperties.REGION:
-                curValue = p.region()
+                cur_value = p.region()
             else:
                 raise Exception('Unidentified filter property')
-            if curValue != value:
+            if cur_value != value:
                 del filtered_profs.__all_profs[index]
                 continue
             index += 1
@@ -121,15 +134,23 @@ class AllStaticProfiles(AllProfiles):
             prof.change_clade(new_clade)
         return shuffled
 
+    def log_convert(self):
+        converted = AllStaticProfiles()
+        for p in self.get_all_profiles():
+            converted.add_profile(p.log_convert())
+        return converted
+
 
 class StaticProfile(Profile):
-    def __init__(self, clade, position, region):
+    def __init__(self, clade, region, position):
         super().__init__(clade, region, position)
         self.__distribution = {}  # amino acid -> percent
 
     def add_dist(self, amino_acid, percent):
         if not isinstance(amino_acid, AminoAcid):
             amino_acid = AminoAcid(amino_acid)
+        if not isinstance(percent, int):
+            percent = float(percent)
         self.__distribution[amino_acid] = percent
 
     def get_distr(self, amino_acid):
@@ -142,6 +163,12 @@ class StaticProfile(Profile):
 
     def dim(self):
         return self.__distribution.keys()
+
+    def log_convert(self):
+        converted = StaticProfile(self.clade(), self.region(), self.position())
+        for aa in self.dim():
+            converted.add_dist(aa, logConvert(self.get_distr(aa)))
+        return converted
 
 
 class AllDynamicProfiles(AllProfiles):
@@ -223,7 +250,7 @@ def read_dynamic(fileName):
 
 # read profiles stored in files
 def get_all_dynamic_profiles():
-    fns = [join(DATA_FOLDER_NAME, fn) for fn in listdir(DATA_FOLDER_NAME)]
+    fns = [join(DYNAMIC_DATA_FOLDER_NAME, fn) for fn in listdir(DYNAMIC_DATA_FOLDER_NAME)]
     all_profs = AllDynamicProfiles()
     for fileName in fns:
         profs = read_dynamic(fileName)
@@ -233,7 +260,7 @@ def get_all_dynamic_profiles():
 
 
 def get_all_static_profiles():
-    fns = [join(DATA_FOLDER_NAME, fn) for fn in listdir(DATA_FOLDER_NAME)]
+    fns = [join(STATIC_DATA_FOLDER_NAME, fn) for fn in listdir(STATIC_DATA_FOLDER_NAME)]
     all_profiles = AllStaticProfiles()
     for fn in fns:
         all_profiles.add_profile(read_static(fn))
@@ -242,7 +269,7 @@ def get_all_static_profiles():
 
 def read_static(file_name):
     clade, region, position = parse_file_name(file_name)
-    profile = StaticProfile(clade, position, region)
+    profile = StaticProfile(clade, region, position)
     with open(file_name) as file:
         reader = csv.reader(file)
         for row in reader:
