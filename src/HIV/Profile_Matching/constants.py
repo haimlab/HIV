@@ -7,7 +7,7 @@ Positions = [295, 332, 339, 392, 448]
 # enumeration to represent regions
 class Region(Enum):
     ALL = 'ALL'
-    ASiA = 'ASIA'
+    ASIA = 'ASIA'
     BR = 'BR'
     CN = 'CN'
     ECA = 'ECA'

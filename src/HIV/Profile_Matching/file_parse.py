@@ -25,6 +25,9 @@ class Profile:
 
     def __init__(self, clade, region, position):
         if not isinstance(clade, Clade):
+            if clade == 'A1':
+                print(clade)
+                print(Clade(clade))
             clade = Clade(clade)
         if not isinstance(region, Region):
             print(clade)
