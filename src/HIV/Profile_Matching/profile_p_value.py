@@ -115,7 +115,7 @@ def main():
         std_rat = ratio(sub)
 
         shuffled_rat = []
-        num_shuffle = 1000
+        num_shuffle = 10000
         for i in range(0, num_shuffle):
             shuffled_prof = sub.shuffle()
             shuffled_rat.append(ratio(shuffled_prof))
