@@ -1,19 +1,18 @@
 from file_parse import get_all_static_profiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
-from math import log10
 import constants
 from constants import FilterProperties
 
 
-# output type {clade - {amino acid -> percentage}
-def calc_all_centroids(all_profiles):
+# output type {prop_type - {amino acid -> percentage}
+def calc_all_centroids(all_profiles, prop_type):
     centroids = {}
-    clades = all_profiles.attr_list(FilterProperties.CLADE)
-    for clade in clades:
-        sub = all_profiles.filter(clade=clade)
+    props = all_profiles.attr_list(prop_type)
+    for p in props:
+        sub = all_profiles.filter(p)
         centroid = calc_centroid(sub)
-        centroids[clade] = centroid
+        centroids[p] = centroid
     return centroids
 
 
@@ -59,19 +58,19 @@ def euc_dist(p1, p2):
 # centroids: {clade -> {aa -> centroid_val}}
 def quantify_distances(centroids, all_profiles):
     distances = {}
-    for clade in centroids:
-        sub_profiles = all_profiles.filter(clade=clade)
-        centroid = centroids[clade]
+    for prop in centroids:
+        sub_profiles = all_profiles.filter(prop)
+        centroid = centroids[prop]
         for prof in sub_profiles.get_all_profiles():
             distr = prof.get_entire_distr()
-            distances[(clade, prof.region())] = euc_dist(centroid, distr)
+            distances[(prop, prof.region())] = euc_dist(centroid, distr)
     return distances
 
 
 # average distance between all centroids
 # input {clade -> {aa -> centroid_val}}
 def avg_centroid(centroids):
-    c_list = [centroids[clade] for clade in centroids]
+    c_list = [centroids[prop] for prop in centroids]
     dist_list = []
     for i in range(0, len(c_list)):
         c = c_list[i]
@@ -83,10 +82,10 @@ def avg_centroid(centroids):
 
 # calculates the ratio of average distance between all centroids and average distance between all centriods
 # and their sub-regions.
-def ratio(profs):
-    all_centroids = calc_all_centroids(profs)  # compute all centroids
+def ratio(profs, prop_type):
+    all_centroids = calc_all_centroids(profs, prop_type)  # compute all centroids
     distances = quantify_distances(all_centroids, profs)  # compute distances of group members to centorids
-    avg_dist_sub_group = sum([distances[key] for key in distances]) / len(distances)  # average distance of sub groups with centriods
+    avg_dist_sub_group = sum([distances[key] for key in distances]) / len(distances)
     avg_centroid_dist = avg_centroid(all_centroids)  # average distance between all centroids
     return avg_centroid_dist / avg_dist_sub_group
 
@@ -102,7 +101,7 @@ def calc_p(std, shuffled):
     return n / d
 
 
-def main():
+def clade_specificity(num_shuffle):
 
     # get starting data, and get sub-groups by position
     all_profiles = get_all_static_profiles()
@@ -112,19 +111,37 @@ def main():
         sub = all_profiles.filter(position=pos)
 
         # non-shuffled ratio
-        std_rat = ratio(sub)
+        std_rat = ratio(sub, FilterProperties.CLADE)
 
         shuffled_rat = []
-        num_shuffle = 10000
         for i in range(0, num_shuffle):
-            shuffled_prof = sub.shuffle()
-            shuffled_rat.append(ratio(shuffled_prof))
+            shuffled_prof = sub.shuffle(FilterProperties.CLADE)
+            shuffled_rat.append(ratio(shuffled_prof, FilterProperties.CLADE))
 
         print('position: ' + str(pos))
         print(calc_p(std_rat, shuffled_rat))
 
 
+def pos_specificity(num_shuffle):
+
+    # get starting data, and get sub-groups by position
+    all_profiles = get_all_static_profiles()
+    all_profiles = all_profiles.log_convert()
+
+    for clade in all_profiles.attr_list(FilterProperties.CLADE):
+        sub = all_profiles.filter(clade=clade)
+
+        # non-shuffled ratio
+        std_rat = ratio(sub, FilterProperties.POSITION)
+
+        shuffled_rat = []
+        for i in range(0, num_shuffle):
+            shuffled_prof = sub.shuffle(FilterProperties.POSITION)
+            shuffled_rat.append(ratio(shuffled_prof, FilterProperties.POSITION))
+
+        print('clade: ' + str(clade))
+        print(calc_p(std_rat, shuffled_rat))
+
+
 if __name__ == '__main__':
-    main()
-
-
+    pos_specificity(1000)

@@ -25,14 +25,8 @@ class Profile:
 
     def __init__(self, clade, region, position):
         if not isinstance(clade, Clade):
-            if clade == 'A1':
-                print(clade)
-                print(Clade(clade))
             clade = Clade(clade)
         if not isinstance(region, Region):
-            print(clade)
-            print(region)
-            print(position)
             region = Region(region)
         self.__clade = clade
         self.__position = position
@@ -41,11 +35,14 @@ class Profile:
     def clade(self):
         return self.__clade
 
-    def change_clade(self, new_clade):
+    def set_clade(self, new_clade):
         self.__clade = new_clade
 
     def position(self):
         return self.__position
+
+    def set_position(self, position):
+        self.__position = position
 
     def region(self):
         return self.__region
@@ -82,7 +79,7 @@ class AllProfiles:
         # filter the profiles according to given criteria
         # returns a result also as AllProfiles instance, so chained filtering can be applied
 
-    def filter(self, clade=None, region=None, aminoAcid=None, position=None):
+    def filter(self, *args, clade=None, region=None, aminoAcid=None, position=None):
         filtered = self
         if clade is not None:
             filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
@@ -92,6 +89,15 @@ class AllProfiles:
             filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
         if position is not None:
             filtered = filtered.__filterBy(position, FilterProperties.POSITION)
+        for arg in args:
+            if type(arg) == int:
+                filtered = filtered.__filterBy(arg, FilterProperties.POSITION)
+            if type(arg) == Clade:
+                filtered = filtered.__filterBy(arg, FilterProperties.Clade)
+            if type(arg) == Region:
+                filtered = filtered.__filterBy(arg, FilterProperties.Region)
+            if type(arg) == AminoAcid:
+                filtered = filtered.__filterBy(arg, FilterProperties.AMINOACID)
         return filtered
 
     def add_profile(self, prof):
@@ -114,27 +120,29 @@ class AllProfiles:
             props.add(prop)
         return list(props)
 
-    def clade_list(self):
-        clades = set()
-        for prof in self.get_all_profiles():
-            clades.add(prof.clade)
-        return list(clades)
-
 
 class AllStaticProfiles(AllProfiles):
     def __init__(self):
         super().__init__()
 
-    def shuffle(self):
-        labels = [p.clade() for p in self.get_all_profiles()]
+    def shuffle(self, prop):
+        if prop == FilterProperties.CLADE:
+            labels = [p.clade() for p in self.get_all_profiles()]
+        elif prop == FilterProperties.POSITION:
+            labels = [p.position() for p in self.get_all_profiles()]
+        else:
+            raise Exception('Unimplemented shuffle property')
         shuffled_labels = []
         while len(labels) > 0:
             ind = randint(0, len(labels) - 1)
             shuffled_labels.append(labels[ind])
             del labels[ind]
         shuffled = deepcopy(self)
-        for prof, new_clade in zip(shuffled.get_all_profiles(), shuffled_labels):
-            prof.change_clade(new_clade)
+        for prof, new_prop in zip(shuffled.get_all_profiles(), shuffled_labels):
+            if prop == FilterProperties.CLADE:
+                prof.set_clade(new_prop)
+            elif prop == FilterProperties.POSITION:
+                prof.set_position(new_prop)
         return shuffled
 
     def log_convert(self):
@@ -289,5 +297,5 @@ def calcYear(yearRange):
     return (year1 + year2) / 2
 
 
-if __name__ ==  '__main__':
+if __name__ == '__main__':
     a = get_all_static_profiles()
