@@ -130,12 +130,14 @@ def pos_specificity(num_shuffle):
 
     for clade in all_profiles.attr_list(FilterProperties.CLADE):
         sub = all_profiles.filter(clade=clade)
+        print('calculating positional specificity for ' + str(clade))
 
         # non-shuffled ratio
         std_rat = ratio(sub, FilterProperties.POSITION)
 
         shuffled_rat = []
         for i in range(0, num_shuffle):
+            print('%dth shuffle completed' % i)
             shuffled_prof = sub.shuffle(FilterProperties.POSITION)
             shuffled_rat.append(ratio(shuffled_prof, FilterProperties.POSITION))
 
@@ -144,4 +146,4 @@ def pos_specificity(num_shuffle):
 
 
 if __name__ == '__main__':
-    pos_specificity(1000)
+    pos_specificity(10000)
