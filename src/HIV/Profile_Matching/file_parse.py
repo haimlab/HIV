@@ -93,9 +93,9 @@ class AllProfiles:
             if type(arg) == int:
                 filtered = filtered.__filterBy(arg, FilterProperties.POSITION)
             if type(arg) == Clade:
-                filtered = filtered.__filterBy(arg, FilterProperties.Clade)
+                filtered = filtered.__filterBy(arg, FilterProperties.CLADE)
             if type(arg) == Region:
-                filtered = filtered.__filterBy(arg, FilterProperties.Region)
+                filtered = filtered.__filterBy(arg, FilterProperties.REGION)
             if type(arg) == AminoAcid:
                 filtered = filtered.__filterBy(arg, FilterProperties.AMINOACID)
         return filtered
