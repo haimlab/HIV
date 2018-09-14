@@ -17,7 +17,7 @@ class QueryInput:
 
 class Query:
     def __init__(self, query_input, all_profiles):
-        self.all_profiles = all_profiles
+        self.all_profiles = all_profiles.filter(position=query_input.position)
         self.input = query_input
         self.results = {}  # {(clade, region) -> {amino acid -> year}}
         self.scores = {}  # {(clade, region) -> stdev of corresponding profile), for writing to file specifically
@@ -26,9 +26,8 @@ class Query:
         self.best_fit_clade = None
         self.best_fit_region = None
 
-        all_profiles = all_profiles.filter(position=self.input.position)
         for aminoAcid in self.input.profile:
-            sub_profiles = all_profiles.filter(aminoAcid=aminoAcid)
+            sub_profiles = self.all_profiles.filter(aminoAcid=aminoAcid)
             for p in sub_profiles.get_all_profiles():
                 if p.fit is None:
                     print(p.tag())
@@ -47,18 +46,31 @@ class Query:
 
     def find_best_match(self):
 
-        def clac_r2_weighted_stdev(profile, clade, region):
+        def calc_avg_percentage(aa, clade, region):
+            cand_prof = self.all_profiles.filter(clade=clade, region=region, aminoAcid=aa)
+            if len(cand_prof.get_all_profiles()) != 1:
+                for p in cand_prof.get_all_profiles():
+                    print(p.position())
+                print(len(cand_prof.get_all_profiles()))
+                raise Exception('something went wrong')
+            only_prof = cand_prof.get_all_profiles()[0]
+            return sum(only_prof.distr) / len(only_prof.distr)
+
+        def clac_r2_weighted_stdev(profile, clade, region, weighted_avg_year):
 
             # first calculate weighted average
-            total = 0
-            total_weights = 0
-            for aminoAcid in profile:
-                if abs(profile[aminoAcid]) == float('inf'):  # skip inf
-                    continue
-                weight = self.fits[(clade, region)][aminoAcid].r
-                total_weights += weight
-                total += profile[aminoAcid] * weight
-            weighted_avg = total / total_weights
+            # total = 0
+            # total_weights = 0
+            # for aminoAcid in profile:
+            #     if abs(profile[aminoAcid]) == float('inf'):  # skip inf
+            #         continue
+            #     weight = self.fits[(clade, region)][aminoAcid].r
+            #     total_weights += weight
+            #     total += profile[aminoAcid] * weight
+            # weighted_avg = total / total_weights
+
+            # usage weighted best matching year for average
+            weighted_avg = weighted_avg_year
 
             # then calculate weighted stdev
             weighted_square_sum = 0
@@ -66,8 +78,9 @@ class Query:
                 if abs(profile[aminoAcid]) == float('inf'):  # skip inf
                     continue
                 r2 = self.fits[(clade, region)][aminoAcid].r
+                avg_percentage = calc_avg_percentage(aminoAcid, clade, region)
                 percent = self.input.profile[aminoAcid]
-                weight = r2 ** 2 * percent
+                weight = r2 * ((percent + avg_percentage) / 2) ** .5
                 weighted_square_sum += weight * (profile[aminoAcid] - weighted_avg) ** 2
             return (weighted_square_sum / (len(profile) - 1)) ** .5
 
@@ -90,8 +103,9 @@ class Query:
                 if abs(profile[aminoAcid]) == float('inf'):  # skip inf
                     continue
                 r2 = self.fits[(clade, region)][aminoAcid].r
+                avg_percentage_profile = calc_avg_percentage(aminoAcid, clade, region)
                 percent = self.input.profile[aminoAcid]
-                weight = r2 ** 2 * percent
+                weight = r2 * ((percent + avg_percentage_profile) / 2) ** .5
                 weighted_year_sum += weight * profile[aminoAcid]
                 weighted_year_num += weight
 
@@ -101,8 +115,8 @@ class Query:
         for clade, region in self.results:
             profileDict = self.results[(clade, region)]
             # cur_score = calc_stdev(profileDict)
-            cur_score = clac_r2_weighted_stdev(profileDict, clade, region)
             cur_best_match_year = calc_best_matching_year(profileDict, clade, region)
+            cur_score = clac_r2_weighted_stdev(profileDict, clade, region, cur_best_match_year)
             self.scores[(clade, region)] = cur_score
             self.best_match_years[(clade, region)] = cur_best_match_year
             if cur_score < score:
@@ -156,9 +170,9 @@ class Query:
         # for profile in self.all_profiles.profiles:
         all_profiles = get_all_dynamic_profiles()
         all_profiles = all_profiles.filter(position=self.input.position)
-        for profile in all_profiles.profiles:
-            key = profile.clade, profile.region
-            amino_acid = profile.aminoAcid
+        for profile in all_profiles.get_all_profiles():
+            key = profile.clade(), profile.region()
+            amino_acid = profile.amino_acid()
             percentage = None
             for i in range(0, len(profile.years)):
                 if profile.years[i] == period:
@@ -198,10 +212,10 @@ if __name__ == '__main__':
 
     for query_input in query_inputs:
         allProfiles = get_all_dynamic_profiles()
-        for p in allProfiles.profiles:
+        for p in allProfiles.get_all_profiles():
             calcFit(p)
         query = Query(query_input, allProfiles)
         print(query.best_fit_clade)
         print(query.best_fit_region)
-        file_name = join(sys.argv[1], str(query_input.position) + '_r2=0.1.csv')
+        file_name = join(sys.argv[1], str(query_input.position) + '_r2=0.4.csv')
         query.write_intermediate_results(file_name)

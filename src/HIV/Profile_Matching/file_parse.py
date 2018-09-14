@@ -194,7 +194,6 @@ class DynamicProfile(Profile):
         self.years = years
         self.distr = distr  # percentages, in same order as years
         self.numIso = numIso  # #isolates, in same order as years
-        self.position = position
         self.fit = None  # a fit object
         self.mostSimilar = None  # another profile with minimal euc dist
 
