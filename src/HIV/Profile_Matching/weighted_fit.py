@@ -55,7 +55,7 @@ def calc_r_squared(slope, y_intercept, x_data, y_data):
 
     sum_squares_tot = sum_squares(y_data)
     sum_squares_residual = sum_residual(slope, y_intercept, x_data, y_data)
-    return 1 - sum_squares_residual / sum_squares_tot
+    return abs(1 - sum_squares_residual / sum_squares_tot)
 
 
 # take a profile and compute its weighted linear fit
