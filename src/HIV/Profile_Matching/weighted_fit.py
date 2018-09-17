@@ -70,7 +70,7 @@ def calcFit(profile):
     profile.remove_0_isolates()
 
     # to avoid float number round off errors, manually check if all data points are same
-    # and assign slope = 0, y_intercept = any data point value, and r square = 1 (perfect fit)
+    # and assign slope = 0, y_intercept = any data point value, and r square = .4 (perfect fit)
     if checkEqual(profile.distr):
         params = [0, profile.distr[0]]
         r_squared = 0.4
