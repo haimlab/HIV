@@ -25,6 +25,9 @@ class FitResult:
             else:
                 return 2115
 
+    # calculate projected distribution based on year
+    def calc_distr(self, year):
+        return year * self.slope + self.y_intercept
 
 # calculate r square value of a linear regression, referencing following site
 # https://en.wikipedia.org/wiki/Coefficient_of_determination#Definitions

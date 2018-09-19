@@ -211,11 +211,11 @@ class Query:
 if __name__ == '__main__':
 
     query_inputs = [
-        QueryInput(constants.query_profile_B_NA_295_05_to_09, 295, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
-        QueryInput(constants.query_profile_B_NA_332_05_to_09, 332, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
-        QueryInput(constants.query_profile_B_NA_339_05_to_09, 339, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
-        QueryInput(constants.query_profile_B_NA_392_05_to_09, 392, '[2005, 2009]', constants.Clade.B, constants.Region.NA),
-        QueryInput(constants.query_profile_B_NA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.B, constants.Region.NA)
+        QueryInput(constants.query_profile_C_SA_295_05_to_09, 295, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_332_05_to_09, 332, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_339_05_to_09, 339, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_392_05_to_09, 392, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.C, constants.Region.SA)
     ]
 
     for query_input in query_inputs:
