@@ -507,7 +507,7 @@ query_profile_C_SA_339_05_to_09 = {
     AminoAcid('W'): 0,
 }
 
-query_profile_C_SA_395_05_to_09 = {
+query_profile_C_SA_392_05_to_09 = {
     AminoAcid('Z'): 68.037,
     AminoAcid('N'): 14.612,
     AminoAcid('T'): 4.11,
