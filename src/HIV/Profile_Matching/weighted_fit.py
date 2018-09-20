@@ -55,7 +55,7 @@ def calc_r_squared(slope, y_intercept, x_data, y_data):
 
     sum_squares_tot = sum_squares(y_data)
     sum_squares_residual = sum_residual(slope, y_intercept, x_data, y_data)
-    return 1 - sum_squares_residual / sum_squares_tot
+    return abs(1 - sum_squares_residual / sum_squares_tot)
 
 
 # take a profile and compute its weighted linear fit
@@ -70,7 +70,7 @@ def calcFit(profile):
     profile.remove_0_isolates()
 
     # to avoid float number round off errors, manually check if all data points are same
-    # and assign slope = 0, y_intercept = any data point value, and r square = 1 (perfect fit)
+    # and assign slope = 0, y_intercept = any data point value, and r square = .4 (perfect fit)
     if checkEqual(profile.distr):
         params = [0, profile.distr[0]]
         r_squared = 0.4
