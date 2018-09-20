@@ -140,4 +140,4 @@ def pos_specificity(num_shuffle):
 
 
 if __name__ == '__main__':
-    pos_specificity(10000)
+    clade_specificity(10000)
