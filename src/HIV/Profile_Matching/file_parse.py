@@ -216,6 +216,12 @@ class DynamicProfile(Profile):
     def amino_acid(self):
         return self.__aminoAcid
 
+    def get_distr(self, year):
+        for y, distr in zip(self.years, self.distr):
+            if y == year:
+                return distr
+        raise Exception('something is wrong')
+
 
 # get clade, country, position and return as according enums
 def parse_file_name(fileName):
