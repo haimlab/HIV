@@ -1,3 +1,4 @@
+import argparse
 import sys
 import csv
 import constants
@@ -208,14 +209,38 @@ class Query:
             writer.writerows(all_rows)
 
 
-if __name__ == '__main__':
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', nargs='+', dest='positions', type=int, required=True)
+    parser.add_argument('-y', dest='year_range', type=str, required=True)
+    parser.add_argument('-c', dest='clade', type=str, required=True)
+    parser.add_argument('-r', dest='region', type=str, required=True)
+    parser.add_argument('-o', dest='out_dir', type=str, required=True)
+    cmd_args = parser.parse_args()
+    positions = cmd_args.positions
+    clade = constants.Clade(cmd_args.clade)
+    year_range = cmd_args.year_range
+    region = constants.Region(cmd_args.region)
+    out_dir = cmd_args.out_dir
+
+    all_profs = get_all_dynamic_profiles()
+    for p in positions:
+        profs = all_profs.filter(position=p, clade=clade, region=region)
+        for aa in constants.AminoAcid:
+            #TODO continue here
+            pass
 
     query_inputs = [
-        QueryInput(constants.query_profile_C_SA_295_05_to_09, 295, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
-        QueryInput(constants.query_profile_C_SA_332_05_to_09, 332, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
-        QueryInput(constants.query_profile_C_SA_339_05_to_09, 339, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
-        QueryInput(constants.query_profile_C_SA_392_05_to_09, 392, '[2005, 2009]', constants.Clade.C, constants.Region.SA),
-        QueryInput(constants.query_profile_C_SA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.C, constants.Region.SA)
+        QueryInput(constants.query_profile_C_SA_295_05_to_09, 295, '[2005, 2009]', constants.Clade.C,
+                   constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_332_05_to_09, 332, '[2005, 2009]', constants.Clade.C,
+                   constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_339_05_to_09, 339, '[2005, 2009]', constants.Clade.C,
+                   constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_392_05_to_09, 392, '[2005, 2009]', constants.Clade.C,
+                   constants.Region.SA),
+        QueryInput(constants.query_profile_C_SA_448_05_to_09, 448, '[2005, 2009]', constants.Clade.C,
+                   constants.Region.SA)
     ]
 
     for query_input in query_inputs:
@@ -227,3 +252,6 @@ if __name__ == '__main__':
         print(query.best_fit_region)
         file_name = join(sys.argv[1], str(query_input.position) + '_r2=0.4.csv')
         query.write_intermediate_results(file_name)
+
+if __name__ == '__main__':
+    main()
