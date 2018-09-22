@@ -3,7 +3,6 @@ import sys
 import constants
 from file_parse import get_all_dynamic_profiles, calcYear
 from weighted_fit import calcFit
-from os.path import join
 import csv
 
 
@@ -28,6 +27,8 @@ def write_validation_results(query, out_file_name, y2predict):
         writer.writerow(['Profile'] + [aa.value for aa in constants.AminoAcid])
         all_prof = get_all_dynamic_profiles().filter(clade=query.input.clade, region=query.input.region,
                                                      position=query.input.position)
+        for p in all_prof.get_all_profiles():
+            calcFit(p)
         prof = {}
         for aa in constants.AminoAcid:
             cur_prof = all_prof.filter(aminoAcid=aa)
@@ -44,12 +45,17 @@ def write_validation_results(query, out_file_name, y2predict):
         writer.writerow(['Profile'] + [aa.value for aa in constants.AminoAcid])
         all_prof = get_all_dynamic_profiles().filter(clade=query.input.clade, region=query.input.region,
                                                      position=query.input.position)
+        for p in all_prof.get_all_profiles():
+            calcFit(p)
         prof = {}
         for aa in constants.AminoAcid:
             cur_prof = all_prof.filter(aminoAcid=aa)
             if len(cur_prof.get_all_profiles()) != 1:
                 raise Exception('something is wrong')
             p = cur_prof.get_all_profiles()[0]
+            print(cur_prof)
+            print(cur_prof.get_all_profiles())
+            print(cur_prof.get_all_profiles()[0])
             prof[aa] = p.fit.calc_distr(y2predict)
         writer.writerow([''] + [prof[aa] for aa in constants.AminoAcid])
         writer.writerow([''])
@@ -61,6 +67,8 @@ def write_validation_results(query, out_file_name, y2predict):
         writer.writerow(['Profile'] + [aa.value for aa in constants.AminoAcid])
         all_prof = get_all_dynamic_profiles().filter(clade=query.input.clade, region=query.input.region,
                                                      position=query.input.position)
+        for p in all_prof.get_all_profiles():
+            calcFit(p)
         prof = {}
         for aa in constants.AminoAcid:
             cur_prof = all_prof.filter(aminoAcid=aa)
@@ -81,12 +89,12 @@ def main():
                    constants.Clade.B, constants.Region.EU)
     ]
 
-    for file_name, query_input in zip(sys.argv, query_inputs):
+    for file_name, query_input in zip(sys.argv[1:], query_inputs):
         allProfiles = get_all_dynamic_profiles()
         for p in allProfiles.get_all_profiles():
             calcFit(p)
         query = Query(query_input, allProfiles)
-        query.write_intermediate_results(file_name)
+        write_validation_results(query, file_name, 2007)
 
 
 if __name__ == '__main__':

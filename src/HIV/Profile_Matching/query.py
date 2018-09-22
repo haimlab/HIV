@@ -181,7 +181,6 @@ class Query:
 
         # calculated year, stdev, and fit parameters
         all_rows.append(['', 'stdev', 'best match year', ''] + amino_acids_list)
-        print(len(self.results))
         for clade, region in self.results:
             row_collection = [
                 [clade.value + ", " + region.value, self.scores[clade, region], self.best_match_years[clade, region], ''],
