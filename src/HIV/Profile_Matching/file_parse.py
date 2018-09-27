@@ -106,6 +106,12 @@ class AllProfiles:
     def get_all_profiles(self):
         return self.__all_profs
 
+    def get_only_profile(self):
+        if len(self.__all_profs) != 1:
+            raise Exception('cannot find single profile')
+        else:
+            return self.__all_profs[0]
+
     def attr_list(self, prop_type):
         props = set()
         for pf in self.get_all_profiles():
@@ -217,6 +223,8 @@ class DynamicProfile(Profile):
         return self.__aminoAcid
 
     def get_distr(self, year):
+        if type(year) is str:
+            year = calcYear(year)
         for y, distr in zip(self.years, self.distr):
             if y == year:
                 return distr
