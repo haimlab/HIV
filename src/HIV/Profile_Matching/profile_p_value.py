@@ -147,8 +147,11 @@ def main():
     cmd_args = parser.parse_args()
 
     if cmd_args.type == 'clade':
-        clade_specificity(cmd_args)
-
+        clade_specificity(cmd_args.num_shuffle)
+    elif cmd_args.type == 'position':
+        pos_specificity(cmd_args.num_shuffle)
+    else:
+        raise Exception('invalid input')
 
 if __name__ == '__main__':
-    clade_specificity(10000)
+    main()
