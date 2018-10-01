@@ -18,6 +18,7 @@ class Region(Enum):
     SA = 'SA'
     TH = 'TH'
     BRAZIL = 'BRAZIL'
+    ALL_WO_KR_NA = 'ALLWOKRNA'
 
 
 # enumeration to represent AA

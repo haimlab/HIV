@@ -8,10 +8,11 @@ from csv import writer
 def predict(all_profiles, clade, region, position, year):
     res = {}
     for aa in AminoAcid:
-        p = all_profiles.filter(clade=clade, region=region, position=position, aminoAcid=aa)
-        if len(p.get_all_profiles()) != 1:
-            raise Exception('something is wrong')
-        distr = p.get_all_profiles()[0].fit.calc_distr(year)
+        try:
+            p = all_profiles.filter(clade=clade, region=region, position=position, aminoAcid=aa).get_only_profile()
+        except:
+            return {aa: -1 for aa in AminoAcid}
+        distr = p.fit.calc_distr(year)
         res[aa] = distr
     return res
 
