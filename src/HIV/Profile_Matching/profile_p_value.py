@@ -108,7 +108,7 @@ def clade_specificity(num_shuffle):
     all_profiles = all_profiles.log_convert()
 
     for pos in constants.Positions:
-        sub = all_profiles.filter(position=pos)
+        sub = all_profiles.filter(pos)
 
         # non-shuffled ratio
         std_rat = ratio(sub, FilterProperties.CLADE)

@@ -217,9 +217,9 @@ class AllDynamicProfiles(AllProfiles):
 
     def get_profile(self, clade, region, position, year):
         prof = []
-        p = self.filter(clade=clade, region=region, position=position)
+        p = self.filter(clade, region, position)
         for aa in AminoAcid:
-            i = p.filter(amino_acid=aa).get_only_profile()
+            i = p.filter(aa).get_only_profile()
             prof.append(i.get_distr(year))
         return prof
 

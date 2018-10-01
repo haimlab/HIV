@@ -25,13 +25,12 @@ def write_validation_results(query, out_file_name, y2predict):
         writer.writerow(['best matching information'])
         writer.writerow(['region:', region.value])
         writer.writerow(['Profile'] + [aa.value for aa in constants.AminoAcid])
-        all_prof = get_all_dynamic_profiles().filter(clade=query.input.clade, region=query.input.region,
-                                                     position=query.input.position)
+        all_prof = get_all_dynamic_profiles().filter(query.input.clade, query.input.region, query.input.position)
         for p in all_prof.get_all_profiles():
             calcFit(p)
         prof = {}
         for aa in constants.AminoAcid:
-            cur_prof = all_prof.filter(aminoAcid=aa)
+            cur_prof = all_prof.filter(aa)
             if len(cur_prof.get_all_profiles()) != 1:
                 raise Exception('something is wrong')
             p = cur_prof.get_all_profiles()[0]
@@ -43,13 +42,12 @@ def write_validation_results(query, out_file_name, y2predict):
         writer.writerow(['profile predicted'])
         writer.writerow(['year:', str(y2predict)])
         writer.writerow(['Profile'] + [aa.value for aa in constants.AminoAcid])
-        all_prof = get_all_dynamic_profiles().filter(clade=query.input.clade, region=query.input.region,
-                                                     position=query.input.position)
+        all_prof = get_all_dynamic_profiles().filter(query.input.clade, query.input.region, query.input.position)
         for p in all_prof.get_all_profiles():
             calcFit(p)
         prof = {}
         for aa in constants.AminoAcid:
-            cur_prof = all_prof.filter(aminoAcid=aa)
+            cur_prof = all_prof.filter(aa)
             if len(cur_prof.get_all_profiles()) != 1:
                 raise Exception('something is wrong')
             p = cur_prof.get_all_profiles()[0]
@@ -65,13 +63,12 @@ def write_validation_results(query, out_file_name, y2predict):
         writer.writerow(['year:', str(y2predict)])
         writer.writerow(['region:', query.input.region.value])
         writer.writerow(['Profile'] + [aa.value for aa in constants.AminoAcid])
-        all_prof = get_all_dynamic_profiles().filter(clade=query.input.clade, region=query.input.region,
-                                                     position=query.input.position)
+        all_prof = get_all_dynamic_profiles().filter(query.input.clade, query.input.region, query.input.position)
         for p in all_prof.get_all_profiles():
             calcFit(p)
         prof = {}
         for aa in constants.AminoAcid:
-            cur_prof = all_prof.filter(aminoAcid=aa)
+            cur_prof = all_prof.filter(aa)
             if len(cur_prof.get_all_profiles()) != 1:
                 raise Exception('something is wrong')
             p = cur_prof.get_all_profiles()[0]
