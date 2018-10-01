@@ -54,33 +54,9 @@ class AllProfiles:
     def __init__(self):
         self.__all_profs = []
 
-    def __filterBy(self, value, prop):
-
-        filtered_profs = deepcopy(self)
-        index = 0
-        while index < len(filtered_profs.__all_profs):
-            p = filtered_profs.__all_profs[index]
-            if prop == FilterProperties.AMINOACID:
-                cur_value = p.amino_acid()
-            elif prop == FilterProperties.CLADE:
-                cur_value = p.clade()
-            elif prop == FilterProperties.POSITION:
-                cur_value = p.position()
-            elif prop == FilterProperties.REGION:
-                cur_value = p.region()
-            else:
-                raise Exception('Unidentified filter property')
-            if cur_value != value:
-                del filtered_profs.__all_profs[index]
-                continue
-            index += 1
-        return filtered_profs
-
-        # filter the profiles according to given criteria
-        # returns a result also as AllProfiles instance, so chained filtering can be applied
-
+    # filter the profiles according to given criteria
+    # returns a result also as AllProfiles instance, so chained filtering can be applied
     def filter(self, *args):
-
         filtered = AllProfiles()
         for p in self.get_all_profiles():
             include = True
@@ -101,26 +77,6 @@ class AllProfiles:
                     break
             if include:
                 filtered.add_profile(p)
-        return filtered
-
-        # filtered = self
-        # if clade is not None:
-        #     filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
-        # if region is not None:
-        #     filtered = filtered.__filterBy(region, FilterProperties.REGION)
-        # if aminoAcid is not None:
-        #     filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
-        # if position is not None:
-        #     filtered = filtered.__filterBy(position, FilterProperties.POSITION)
-        # for arg in args:
-        #     if type(arg) == int:
-        #         filtered = filtered.__filterBy(arg, FilterProperties.POSITION)
-        #     if type(arg) == Clade:
-        #         filtered = filtered.__filterBy(arg, FilterProperties.CLADE)
-        #     if type(arg) == Region:
-        #         filtered = filtered.__filterBy(arg, FilterProperties.REGION)
-        #     if type(arg) == AminoAcid:
-        #         filtered = filtered.__filterBy(arg, FilterProperties.AMINOACID)
         return filtered
 
     def add_profile(self, prof):
