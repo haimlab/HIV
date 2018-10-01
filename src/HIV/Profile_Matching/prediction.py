@@ -9,9 +9,17 @@ def predict(all_profiles, clade, region, position, year):
     res = {}
     for aa in AminoAcid:
         try:
-            p = all_profiles.filter(clade=clade, region=region, position=position, aminoAcid=aa).get_only_profile()
-        except:
-            return {aa: -1 for aa in AminoAcid}
+            p = all_profiles.filter(
+                clade=clade,
+                region=region,
+                position=position,
+                amino_acid=aa
+            ).get_only_profile()
+        except Exception as e:
+            if str(e) == 'cannot find single profile':
+                return {aa: -1 for aa in AminoAcid}
+            else:
+                raise
         distr = p.fit.calc_distr(year)
         res[aa] = distr
     return res
