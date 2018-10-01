@@ -106,6 +106,12 @@ class AllProfiles:
     def get_all_profiles(self):
         return self.__all_profs
 
+    def get_only_profile(self):
+        if len(self.__all_profs) != 1:
+            raise Exception('cannot find single profile')
+        else:
+            return self.__all_profs[0]
+
     def attr_list(self, prop_type):
         props = set()
         for pf in self.get_all_profiles():
@@ -186,6 +192,13 @@ class AllDynamicProfiles(AllProfiles):
     def __init__(self):
         super().__init__()
 
+    def get_profile(self, clade, region, position, year):
+        prof = []
+        p = self.filter(clade=clade, region=region, position=position)
+        for aa in AminoAcid:
+            i = p.filter(aminoAcid=aa).get_only_profile()
+            prof.append(i.get_distr(year))
+        return prof
 
 class DynamicProfile(Profile):
     def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
@@ -215,6 +228,14 @@ class DynamicProfile(Profile):
 
     def amino_acid(self):
         return self.__aminoAcid
+
+    def get_distr(self, year):
+        if type(year) is str:
+            year = calcYear(year)
+        for y, distr in zip(self.years, self.distr):
+            if y == year:
+                return distr
+        raise Exception('something is wrong')
 
 
 # get clade, country, position and return as according enums

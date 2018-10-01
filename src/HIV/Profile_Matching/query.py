@@ -36,6 +36,7 @@ class Query:
                 self.add_result(p.clade(), p.region(), aminoAcid,
                                 p.fit.calcYear(query_input.profile[aminoAcid],
                                 calcYear(self.input.year_range)), p.fit)
+        self.calc_best_match()
         self.find_best_match()
 
     def add_result(self, clade, region, aminoAcid, year, fit):
@@ -102,7 +103,10 @@ class Query:
             weighted_square_sum += weights[aa] * (prof[aa] - weighted_avg) ** 2
         return (weighted_square_sum / (len(prof) - 1)) ** .5
 
-    def find_best_match(self):
+
+
+
+    def calc_best_match(self):
 
         def calc_best_matching_year(profile, clade, region):
 
@@ -126,11 +130,36 @@ class Query:
             cur_score = self.clac_r2_weighted_stdev(profileDict, clade, region, cur_best_match_year)
             self.scores[(clade, region)] = cur_score
             self.best_match_years[(clade, region)] = cur_best_match_year
-            if cur_score < score:
-                score = cur_score
-                self.best_fit_clade = clade
-                self.best_fit_region = region
-        return self.best_fit_clade, self.best_fit_region
+
+
+    def find_best_match(self):
+        cur_score = sys.float_info.max
+        clade = None
+        region = None
+        for c, r in self.scores:
+            if cur_score > self.scores[(c,r)]:
+                cur_score = self.scores[(c, r)]
+                clade = c
+                region = r
+        self.best_fit_clade = clade
+        self.best_fit_region = region
+        return clade, region, cur_score, self.best_match_years[(clade, region)]
+
+
+    # find the best matching region within the same clade
+    def find_diff_region_best_match(self):
+        cur_score = sys.float_info.max
+        clade = None
+        region = None
+        for c, r in self.scores:
+            if cur_score > self.scores[(c, r)] and c == self.input.clade and r != self.input.region:
+                cur_score = self.scores[(c, r)]
+                clade = c
+                region = r
+        self.best_fit_clade = clade
+        self.best_fit_region = region
+        return clade, region, cur_score, self.best_match_years[(clade, region)]
+
 
     # write intermediate results for verfication purposes
     def write_intermediate_results(self, fileName):
@@ -153,7 +182,6 @@ class Query:
 
         # calculated year, stdev, and fit parameters
         all_rows.append(['', 'stdev', 'best match year', ''] + amino_acids_list)
-        print(len(self.results))
         for clade, region in self.results:
             row_collection = [
                 [clade.value + ", " + region.value, self.scores[clade, region], self.best_match_years[clade, region], ''],

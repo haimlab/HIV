@@ -18,6 +18,7 @@ class Region(Enum):
     SA = 'SA'
     TH = 'TH'
     BRAZIL = 'BRAZIL'
+    ALL_WO_KR_NA = 'ALLWOKRNA'
 
 
 # enumeration to represent AA
@@ -664,6 +665,54 @@ query_profile_C_SA_448_00_to_04 = {
     AminoAcid('Y'): 0,
     AminoAcid('Q'): 0,
     AminoAcid('I'): 0.366,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0,
+    AminoAcid('A'): 0,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0,
+    AminoAcid('M'): 0,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0,
+}
+
+query_profile_B_EU_339_87_to_94 = {
+    AminoAcid('Z'): 70.588,
+    AminoAcid('N'): 2.9411,
+    AminoAcid('T'): 8.824,
+    AminoAcid('S'): 2.9411,
+    AminoAcid('D'): 2.9411,
+    AminoAcid('E'): 5.8824,
+    AminoAcid('K'): 0,
+    AminoAcid('R'): 0,
+    AminoAcid('H'): 5.8824,
+    AminoAcid('Y'): 0,
+    AminoAcid('Q'): 0,
+    AminoAcid('I'): 0,
+    AminoAcid('L'): 0,
+    AminoAcid('V'): 0,
+    AminoAcid('A'): 0,
+    AminoAcid('C'): 0,
+    AminoAcid('F'): 0,
+    AminoAcid('G'): 0,
+    AminoAcid('M'): 0,
+    AminoAcid('P'): 0,
+    AminoAcid('W'): 0,
+}
+
+query_profile_B_EU_392_87_to_94 = {
+    AminoAcid('Z'): 91.176,
+    AminoAcid('N'): 5.8824,
+    AminoAcid('T'): 0,
+    AminoAcid('S'): 0,
+    AminoAcid('D'): 2.9411,
+    AminoAcid('E'): 0,
+    AminoAcid('K'): 0,
+    AminoAcid('R'): 0,
+    AminoAcid('H'): 0,
+    AminoAcid('Y'): 0,
+    AminoAcid('Q'): 0,
+    AminoAcid('I'): 0,
     AminoAcid('L'): 0,
     AminoAcid('V'): 0,
     AminoAcid('A'): 0,
