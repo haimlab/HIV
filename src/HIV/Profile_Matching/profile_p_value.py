@@ -3,6 +3,7 @@ from numpy import asarray
 from scipy.cluster.vq import kmeans
 import constants
 from constants import FilterProperties
+from argparse import ArgumentParser
 
 
 # output type {prop_type - {amino acid -> percentage}
@@ -137,6 +138,16 @@ def pos_specificity(num_shuffle):
         shuffled_rat.append(ratio(shuffled_prof, FilterProperties.POSITION))
 
     print('p-value: ' + str(calc_p(std_rat, shuffled_rat)))
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('-t', dest='type', type=str, required=True)
+    parser.add_argument('-n', dest='num_shuffle', type=int, required=True)
+    cmd_args = parser.parse_args()
+
+    if cmd_args.type == 'clade':
+        clade_specificity(cmd_args)
 
 
 if __name__ == '__main__':
