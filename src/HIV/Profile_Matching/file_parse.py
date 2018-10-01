@@ -79,25 +79,46 @@ class AllProfiles:
         # filter the profiles according to given criteria
         # returns a result also as AllProfiles instance, so chained filtering can be applied
 
-    def filter(self, *args, clade=None, region=None, aminoAcid=None, position=None):
-        filtered = self
-        if clade is not None:
-            filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
-        if region is not None:
-            filtered = filtered.__filterBy(region, FilterProperties.REGION)
-        if aminoAcid is not None:
-            filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
-        if position is not None:
-            filtered = filtered.__filterBy(position, FilterProperties.POSITION)
-        for arg in args:
-            if type(arg) == int:
-                filtered = filtered.__filterBy(arg, FilterProperties.POSITION)
-            if type(arg) == Clade:
-                filtered = filtered.__filterBy(arg, FilterProperties.CLADE)
-            if type(arg) == Region:
-                filtered = filtered.__filterBy(arg, FilterProperties.REGION)
-            if type(arg) == AminoAcid:
-                filtered = filtered.__filterBy(arg, FilterProperties.AMINOACID)
+    def filter(self, **kwargs):
+
+        filtered = AllProfiles()
+        for p in self.get_all_profiles():
+            include = True
+            for k in kwargs:
+                if k == 'position' and p.position() != kwargs[k]:
+                    include = False
+                    break
+                if k == 'clade' and p.clade() != kwargs[k]:
+                    include = False
+                    break
+                if k == 'region' and p.region() != kwargs[k]:
+                    include = False
+                    break
+                if k == 'amino_acid' and p.amino_acid() != kwargs[k]:
+                    include = False
+                    break
+            if include:
+                filtered.add_profile(p)
+        return filtered
+
+        # filtered = self
+        # if clade is not None:
+        #     filtered = filtered.__filterBy(clade, FilterProperties.CLADE)
+        # if region is not None:
+        #     filtered = filtered.__filterBy(region, FilterProperties.REGION)
+        # if aminoAcid is not None:
+        #     filtered = filtered.__filterBy(aminoAcid, FilterProperties.AMINOACID)
+        # if position is not None:
+        #     filtered = filtered.__filterBy(position, FilterProperties.POSITION)
+        # for arg in args:
+        #     if type(arg) == int:
+        #         filtered = filtered.__filterBy(arg, FilterProperties.POSITION)
+        #     if type(arg) == Clade:
+        #         filtered = filtered.__filterBy(arg, FilterProperties.CLADE)
+        #     if type(arg) == Region:
+        #         filtered = filtered.__filterBy(arg, FilterProperties.REGION)
+        #     if type(arg) == AminoAcid:
+        #         filtered = filtered.__filterBy(arg, FilterProperties.AMINOACID)
         return filtered
 
     def add_profile(self, prof):
