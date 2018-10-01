@@ -35,11 +35,11 @@ class TestFileParse(unittest.TestCase):
 
     def test_filter(self):
         all_p = file_parse.get_all_static_profiles()
-        pos_295 = all_p.filter(position=295)
-        pos_332 = all_p.filter(position=332)
-        pos_339 = all_p.filter(position=339)
-        pos_392 = all_p.filter(position=392)
-        pos_448 = all_p.filter(position=448)
+        pos_295 = all_p.filter(295)
+        pos_332 = all_p.filter(332)
+        pos_339 = all_p.filter(339)
+        pos_392 = all_p.filter(392)
+        pos_448 = all_p.filter(448)
         for p in pos_332.get_all_profiles():
             self.assertTrue(p.position() == 332)
         l_295 = len(pos_295.get_all_profiles())
@@ -53,7 +53,7 @@ class TestFileParse(unittest.TestCase):
 
     def test_filter_with_named_args(self):
         all_static_profs = file_parse.get_all_static_profiles()
-        sub = all_static_profs.filter(clade=constants.Clade.B, position=295)
+        sub = all_static_profs.filter(constants.Clade.B, 295)
         for s in sub.get_all_profiles():
             self.assertEqual(s.position(), 295)
             self.assertEqual(s.clade(), constants.Clade.B)
@@ -61,7 +61,7 @@ class TestFileParse(unittest.TestCase):
 
     def test_filter_with_vargs(self):
         all_static_profs = file_parse.get_all_static_profiles()
-        sub = all_static_profs.filter(clade=constants.Clade.B, position=295)
+        sub = all_static_profs.filter(constants.Clade.B, 295)
         for s in sub.get_all_profiles():
             self.assertEqual(s.position(), 295)
             self.assertEqual(s.clade(), constants.Clade.B)
@@ -69,7 +69,7 @@ class TestFileParse(unittest.TestCase):
 
     def test_filter_with_mixed_args(self):
         all_static_profs = file_parse.get_all_static_profiles()
-        sub = all_static_profs.filter(position=295, clade=constants.Clade.B)
+        sub = all_static_profs.filter(295, constants.Clade.B)
         for s in sub.get_all_profiles():
             self.assertEqual(s.position(), 295)
             self.assertEqual(s.clade(), constants.Clade.B)

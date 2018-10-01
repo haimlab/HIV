@@ -79,22 +79,24 @@ class AllProfiles:
         # filter the profiles according to given criteria
         # returns a result also as AllProfiles instance, so chained filtering can be applied
 
-    def filter(self, **kwargs):
+    def filter(self, *args):
 
         filtered = AllProfiles()
         for p in self.get_all_profiles():
             include = True
-            for k in kwargs:
-                if k == 'position' and p.position() != kwargs[k]:
+            for arg in args:
+                if type(arg) not in [int, Clade, Region, AminoAcid]:
+                    raise Exception('invalid filter')
+                if type(arg) == int and p.position() != arg:
                     include = False
                     break
-                if k == 'clade' and p.clade() != kwargs[k]:
+                if type(arg) == Clade and p.clade() != arg:
                     include = False
                     break
-                if k == 'region' and p.region() != kwargs[k]:
+                if type(arg) == Region and p.region() != arg:
                     include = False
                     break
-                if k == 'amino_acid' and p.amino_acid() != kwargs[k]:
+                if type(arg) == AminoAcid and p.amino_acid() != arg:
                     include = False
                     break
             if include:
@@ -217,7 +219,7 @@ class AllDynamicProfiles(AllProfiles):
         prof = []
         p = self.filter(clade=clade, region=region, position=position)
         for aa in AminoAcid:
-            i = p.filter(aminoAcid=aa).get_only_profile()
+            i = p.filter(amino_acid=aa).get_only_profile()
             prof.append(i.get_distr(year))
         return prof
 
