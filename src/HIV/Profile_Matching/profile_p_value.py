@@ -1,4 +1,4 @@
-from file_parse import get_all_static_profiles
+from file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
 import constants
@@ -102,13 +102,12 @@ def calc_p(std, shuffled):
     return n / d
 
 
-def clade_specificity(num_shuffle):
+def clade_specificity(num_shuffle, all_profiles, positions):
 
     # get starting data, and get sub-groups by position
-    all_profiles = get_all_static_profiles()
     all_profiles = all_profiles.log_convert()
 
-    for pos in constants.Positions:
+    for pos in positions:
         sub = all_profiles.filter(pos)
 
         # non-shuffled ratio
@@ -123,10 +122,9 @@ def clade_specificity(num_shuffle):
         print(calc_p(std_rat, shuffled_rat))
 
 
-def pos_specificity(num_shuffle):
+def pos_specificity(num_shuffle, all_profiles):
 
     # get starting data, and get sub-groups by position
-    all_profiles = get_all_static_profiles()
     all_profiles = all_profiles.log_convert()
 
     # non-shuffled ratio
@@ -140,16 +138,48 @@ def pos_specificity(num_shuffle):
     print('p-value: ' + str(calc_p(std_rat, shuffled_rat)))
 
 
+def select_sub_group(raw, clade_region_pairs, positions):
+    # parse input clade, region pairs
+    pairs = []
+    for p in clade_region_pairs:
+        [c, r] = p.split(',')
+        pairs.append((constants.Clade(c), constants.Region(r)))
+
+    # combine clade, region, position and make a list of filters
+    filters = []
+    for p in positions:
+        filters += [(p,) + i for i in pairs]
+
+    # use filter to grab all desired sub profiles
+    all_prof = AllStaticProfiles()
+    for f in filters:
+        sub = raw.filter(*f).get_all_profiles()
+        for s in sub:
+            all_prof.add_profile(s)
+
+    return all_prof
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('-t', dest='type', type=str, required=True)
     parser.add_argument('-n', dest='num_shuffle', type=int, required=True)
+    parser.add_argument('-e', dest='epitope', type=str, required=True)
+    parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True)
     cmd_args = parser.parse_args()
 
+    if cmd_args.epitope == '2g12':
+        positions = constants.POS_2G12
+    elif cmd_args.epitope == '2f5':
+        positions = constants.POS_2F5
+    else:
+        raise Exception('invalid epitope type')
+
+    all_prof = select_sub_group(get_all_static_profiles(), cmd_args.clade_region_paris, positions)
+
     if cmd_args.type == 'clade':
-        clade_specificity(cmd_args.num_shuffle)
+        clade_specificity(cmd_args.num_shuffle, all_prof, positions)
     elif cmd_args.type == 'position':
-        pos_specificity(cmd_args.num_shuffle)
+        pos_specificity(cmd_args.num_shuffle, all_prof)
     else:
         raise Exception('invalid input')
 
