@@ -105,11 +105,6 @@ class AllProfiles:
             props.add(prop)
         return list(props)
 
-
-class AllStaticProfiles(AllProfiles):
-    def __init__(self):
-        super().__init__()
-
     def shuffle(self, prop):
         if prop == FilterProperties.CLADE:
             labels = [p.clade() for p in self.get_all_profiles()]
@@ -129,6 +124,11 @@ class AllStaticProfiles(AllProfiles):
             elif prop == FilterProperties.POSITION:
                 prof.set_position(new_prop)
         return shuffled
+
+
+class AllStaticProfiles(AllProfiles):
+    def __init__(self):
+        super().__init__()
 
     def log_convert(self):
         converted = AllStaticProfiles()
