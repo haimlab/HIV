@@ -174,7 +174,7 @@ def main():
     else:
         raise Exception('invalid epitope type')
 
-    all_prof = select_sub_group(get_all_static_profiles(), cmd_args.clade_region_paris, positions)
+    all_prof = select_sub_group(get_all_static_profiles(), cmd_args.clade_region_pairs, positions)
 
     if cmd_args.type == 'clade':
         clade_specificity(cmd_args.num_shuffle, all_prof, positions)
