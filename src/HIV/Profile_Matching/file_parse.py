@@ -193,6 +193,13 @@ class AllDynamicProfiles(AllProfiles):
     def __init__(self):
         super().__init__()
 
+    def get_profile(self, clade, region, position, year):
+        prof = []
+        p = self.filter(clade=clade, region=region, position=position)
+        for aa in AminoAcid:
+            i = p.filter(aminoAcid=aa).get_only_profile()
+            prof.append(i.get_distr(year))
+        return prof
 
 class DynamicProfile(Profile):
     def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
