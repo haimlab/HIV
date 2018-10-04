@@ -2,6 +2,7 @@ import numpy as np
 import pylab
 from scipy.optimize import curve_fit
 from file_parse import get_all_dynamic_profiles
+from copy import copy
 
 
 class FitResult:
@@ -62,7 +63,7 @@ def calc_r_squared(slope, y_intercept, x_data, y_data):
 
 
 # take a profile and compute its weighted linear fit
-def calcFit(profile, skip_tail=False):
+def calcFit(profile, skip=[]):
 
     def checkEqual(arr):
         for i in range(0, len(arr) - 1):
@@ -70,13 +71,18 @@ def calcFit(profile, skip_tail=False):
                 return False
         return True
 
-    if skip_tail:
-        distr_tail = profile.distr[-1]
-        num_iso_tail = profile.numIso[-1]
-        years_tail = profile.years[-1]
-        del profile.distr[-1]
-        del profile.numIso[-1]
-        del profile.years[-1]
+
+    distr_copy = copy(profile.distr)
+    num_iso_copy = copy(profile.distr)
+    years_copy = copy(profile.years)
+    i = 0
+    while i < len(profile.years):
+        if profile.years[i] in skip:
+            del profile.distr[i]
+            del profile.numIso[i]
+            del profile.years[i]
+            continue
+        i += 1
 
     profile.remove_0_isolates()
 
@@ -91,15 +97,14 @@ def calcFit(profile, skip_tail=False):
         params, cov = curve_fit(lambda x, a, b: a * x + b, profile.years,
                                 profile.distr, sigma=sigmas, absolute_sigma=False)
         r_squared = calc_r_squared(params[0], params[1], profile.years, profile.distr)
+        print(profile.years)
+        print(profile.distr)
     profile.fit = FitResult(params[0], params[1], r_squared)
 
-    if skip_tail:
-        # noinspection PyUnboundLocalVariable
-        profile.distr.append(distr_tail)
-        # noinspection PyUnboundLocalVariable
-        profile.numIso.append(num_iso_tail)
-        # noinspection PyUnboundLocalVariable
-        profile.years.append(years_tail)
+    # restore modifed sequences
+    profile.distr = distr_copy
+    profile.iso_copy = num_iso_copy
+    profile.years_copy = years_copy
 
 
 def main():
