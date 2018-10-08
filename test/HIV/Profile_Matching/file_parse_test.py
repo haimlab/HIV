@@ -3,6 +3,7 @@ import unittest
 import file_parse
 import constants
 
+
 class TestFileParse(unittest.TestCase):
 
     def test_parse_file_name(self):
@@ -27,7 +28,7 @@ class TestFileParse(unittest.TestCase):
 
     def test_get_all_static_profiles(self):
         all_p = file_parse.get_all_static_profiles()
-        self.assertEqual(len(all_p.get_all_profiles()), 75)
+        self.assertEqual(len(all_p.get_all_profiles()), 125)
 
     def test_calc_year(self):
         self.assertEqual(file_parse.calcYear('[2010, 2015]'), (2010 + 2015) / 2)
@@ -48,6 +49,9 @@ class TestFileParse(unittest.TestCase):
         l_392 = len(pos_392.get_all_profiles())
         l_448 = len(pos_448.get_all_profiles())
         my_sum = l_295 + l_332 + l_339 + l_392 + l_448
+        pos_2F5 = [662, 663, 664, 665, 667]
+        for p in pos_2F5:
+            my_sum += len(all_p.filter(p).get_all_profiles())
         l_tot = len(all_p.get_all_profiles())
         self.assertEqual(my_sum, l_tot)
 
@@ -57,7 +61,6 @@ class TestFileParse(unittest.TestCase):
         for s in sub.get_all_profiles():
             self.assertEqual(s.position(), 295)
             self.assertEqual(s.clade(), constants.Clade.B)
-        self.assertEquals(len(sub.get_all_profiles()), 5)
 
     def test_filter_with_vargs(self):
         all_static_profs = file_parse.get_all_static_profiles()
@@ -65,7 +68,6 @@ class TestFileParse(unittest.TestCase):
         for s in sub.get_all_profiles():
             self.assertEqual(s.position(), 295)
             self.assertEqual(s.clade(), constants.Clade.B)
-        self.assertEquals(len(sub.get_all_profiles()), 5)
 
     def test_filter_with_mixed_args(self):
         all_static_profs = file_parse.get_all_static_profiles()
@@ -73,7 +75,6 @@ class TestFileParse(unittest.TestCase):
         for s in sub.get_all_profiles():
             self.assertEqual(s.position(), 295)
             self.assertEqual(s.clade(), constants.Clade.B)
-        self.assertEquals(len(sub.get_all_profiles()), 5)
 
     def test_shuffle(self):
         all_p = file_parse.get_all_static_profiles()

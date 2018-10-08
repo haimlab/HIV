@@ -31,8 +31,6 @@ class Query:
         for aminoAcid in self.input.profile:
             sub_profiles = self.all_profiles.filter(aminoAcid=aminoAcid)
             for p in sub_profiles.get_all_profiles():
-                if p.fit is None:
-                    print(p.tag())
                 self.add_result(p.clade(), p.region(), aminoAcid,
                                 p.fit.calcYear(query_input.profile[aminoAcid],
                                 calcYear(self.input.year_range)), p.fit)
@@ -73,8 +71,6 @@ class Query:
         avgs = {}
         for amino_acid in prof:
             avg_percentage = self.calc_avg_percentage(amino_acid, clade, region)
-            if avg_percentage > 100:
-                print(avg_percentage)
             percent = self.input.profile[amino_acid]
             log_avg = log10(self.get_avg_percent(percent, avg_percentage))
             if _min > log_avg:

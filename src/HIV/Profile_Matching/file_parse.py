@@ -10,6 +10,7 @@ AMINO_ACID = 0
 PERCENTAGE = 1
 DYNAMIC_DATA_FOLDER_NAME = 'data\\dynamic'
 STATIC_DATA_FOLDER_NAME = 'data\\static'
+CONTEMP_PREDICTION_DATA_FOLDER_NAME = 'data\\contemporary_prediction'
 LOG_ZERO_DEFAULT = 0.1
 
 # TODO add option of parsing selected subset of input files only, given clade, region, position
@@ -180,6 +181,7 @@ class AllDynamicProfiles(AllProfiles):
             prof.append(i.get_distr(year))
         return prof
 
+
 class DynamicProfile(Profile):
     def __init__(self, aminoAcid, clade, region, distr, numIso, years, position):
         super().__init__(clade, region, position)
@@ -228,7 +230,6 @@ def parse_file_name(fileName):
 
 # read a file for a clade-region combination into profile instances
 def read_dynamic(fileName):
-
     allProfiles = []
     clade, region, position = parse_file_name(fileName)
 
@@ -276,6 +277,16 @@ def get_all_static_profiles():
     for fn in fns:
         all_profiles.add_profile(read_static(fn))
     return all_profiles
+
+
+def get_all_contemporary_prediction_profiles():
+    fns = [join(CONTEMP_PREDICTION_DATA_FOLDER_NAME, fn) for fn in listdir(CONTEMP_PREDICTION_DATA_FOLDER_NAME)]
+    all_profs = AllDynamicProfiles()
+    for fileName in fns:
+        profs = read_dynamic(fileName)
+        for p in profs:
+            all_profs.add_profile(p)
+    return all_profs
 
 
 def read_static(file_name):

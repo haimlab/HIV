@@ -1,9 +1,10 @@
-from file_parse import get_all_dynamic_profiles
+from file_parse import get_all_dynamic_profiles, get_all_contemporary_prediction_profiles
 from weighted_fit import calcFit
 from constants import AminoAcid, Clade, Region
 import argparse
 from os.path import join
 from csv import writer
+
 
 def predict(all_profiles, clade, region, position, year):
     res = {}
@@ -32,6 +33,7 @@ def main():
     parser.add_argument('-y', nargs='+', dest='years', type=float, required=True)
     parser.add_argument('-r', nargs='+', dest='regions', type=str, required=True)
     parser.add_argument('-t', nargs='+', dest='omit', type=float, required=True)
+    parser.add_argument('-n', dest='contemporary', type=bool, required=True)
     parser.add_argument('-o', dest='out_dir', type=str, required=True)
     cmd_args = parser.parse_args()
     positions = cmd_args.positions
@@ -40,7 +42,10 @@ def main():
     regions = [Region(r) for r in cmd_args.regions]
     out_dir = cmd_args.out_dir
 
-    all_profiles = get_all_dynamic_profiles()
+    if cmd_args.contemporary:
+        all_profiles = get_all_contemporary_prediction_profiles()
+    else:
+        all_profiles = get_all_dynamic_profiles()
     for p in all_profiles.get_all_profiles():
         calcFit(p, skip=cmd_args.omit)
 
