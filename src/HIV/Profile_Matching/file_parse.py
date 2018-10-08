@@ -12,7 +12,8 @@ DYNAMIC_DATA_FOLDER_NAME = 'data\\dynamic'
 STATIC_DATA_FOLDER_NAME = 'data\\static'
 LOG_ZERO_DEFAULT = 0.1
 
-
+# TODO add option of parsing selected subset of input files only, given clade, region, position
+# TODO add distance member method to profile class
 def logConvert(val):
     if val == 0:
         return 0
