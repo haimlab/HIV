@@ -51,9 +51,6 @@ def write_validation_results(query, out_file_name, y2predict):
             if len(cur_prof.get_all_profiles()) != 1:
                 raise Exception('something is wrong')
             p = cur_prof.get_all_profiles()[0]
-            print(cur_prof)
-            print(cur_prof.get_all_profiles())
-            print(cur_prof.get_all_profiles()[0])
             prof[aa] = p.fit.calc_distr(y2predict)
         writer.writerow([''] + [prof[aa] for aa in constants.AminoAcid])
         writer.writerow([''])

@@ -97,8 +97,6 @@ def calcFit(profile, skip=[]):
         params, cov = curve_fit(lambda x, a, b: a * x + b, profile.years,
                                 profile.distr, sigma=sigmas, absolute_sigma=False)
         r_squared = calc_r_squared(params[0], params[1], profile.years, profile.distr)
-        print(profile.years)
-        print(profile.distr)
     profile.fit = FitResult(params[0], params[1], r_squared)
 
     # restore modifed sequences

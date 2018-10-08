@@ -229,7 +229,6 @@ def parse_file_name(fileName):
 
 # read a file for a clade-region combination into profile instances
 def read_dynamic(fileName):
-
     allProfiles = []
     clade, region, position = parse_file_name(fileName)
 
@@ -280,7 +279,7 @@ def get_all_static_profiles():
 
 
 def get_all_contemporary_prediction_profiles():
-    fns = [join(STATIC_DATA_FOLDER_NAME, fn) for fn in listdir(CONTEMP_PREDICTION_DATA_FOLDER_NAME)]
+    fns = [join(CONTEMP_PREDICTION_DATA_FOLDER_NAME, fn) for fn in listdir(CONTEMP_PREDICTION_DATA_FOLDER_NAME)]
     all_profs = AllDynamicProfiles()
     for fileName in fns:
         profs = read_dynamic(fileName)
