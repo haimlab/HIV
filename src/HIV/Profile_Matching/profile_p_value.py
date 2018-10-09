@@ -4,6 +4,7 @@ from scipy.cluster.vq import kmeans
 import constants
 from constants import FilterProperties
 from argparse import ArgumentParser
+from copy import deepcopy
 
 
 # output type {prop_type - {amino acid -> percentage}
@@ -81,6 +82,14 @@ def avg_centroid(centroids):
     return sum(dist_list) / len(dist_list)
 
 
+def avg_centroid_2(cur_centroid, all_centroids):
+    dist = []
+    for c in all_centroids:
+        if c != cur_centroid:
+            dist.append(euc_dist(cur_centroid, c))
+    return sum(dist)/len(dist)
+
+
 # calculates the ratio of average distance between all centroids and average distance between all centriods
 # and their sub-regions.
 def ratio(profs, prop_type):
@@ -100,6 +109,68 @@ def calc_p(std, shuffled):
         else:
             d += 1
     return n / d
+
+
+def clade_and_region_specificty_helper(all_profiles, positions, cur_pos, pairs):
+
+    positional_centroids = calc_all_centroids(all_profiles, FilterProperties.POSITION)
+    # remove postions not wanted
+    for p in positional_centroids:
+        if p not in positions:
+            del positional_centroids[p]
+
+    pos_sub = all_profiles.filter(cur_pos)
+    pos_centroid = calc_centroid(pos_sub)
+
+    pairs_2 = [s.split(',') for s in pairs]
+    flat_pairs = [(constants.Clade(c), constants.Region(r)) for [c, r] in pairs_2]
+    distances = []
+    for clade, region in flat_pairs:
+        cr_sub = pos_sub.filter(clade).filter(region)
+        try:
+            p = cr_sub.get_only_profile()
+        except Exception as e:
+            if str(e) == 'cannot find single profile':
+                if cur_pos == 295 and clade == constants.Clade.C:
+                    continue
+                elif cur_pos == 332 and clade == constants.Clade.AE:
+                    continue
+                else:
+                    raise e
+            else:
+                raise e
+        profile_centroid = {}
+        for aa in constants.AminoAcid:
+            profile_centroid[aa] = p.get_distr(aa)
+        distances.append(euc_dist(pos_centroid, profile_centroid))
+    avg_dist_within = sum(distances) / len(distances)
+
+    cent_list = [positional_centroids[i] for i in positional_centroids]
+    avg_dist_without = avg_centroid_2(pos_centroid, cent_list)
+
+    return avg_dist_within / avg_dist_without
+
+
+def clade_and_region_specificity(num_shuffle, all_profiles, positions, pairs):
+    all_profiles = all_profiles.log_convert()
+
+    for p in positions:
+        std_rat = clade_and_region_specificty_helper(all_profiles, positions, p, pairs)
+        all_prof_copy = deepcopy(all_profiles)
+        num_above = 0
+        num_below = 0
+        for _ in range(0, num_shuffle):
+            all_prof_copy.shuffle(FilterProperties.POSITION)
+            rand_rat = clade_and_region_specificty_helper(all_prof_copy, positions, p, pairs)
+            if rand_rat > std_rat:
+                num_above += 1
+            elif rand_rat < std_rat:
+                num_below -= 1
+
+        try:
+            print(f'position: {p}, p-value: {num_below / num_above}')
+        except ZeroDivisionError:
+            print(f'position: {p}, zero div')
 
 
 def clade_specificity(num_shuffle, all_profiles, positions):
@@ -163,6 +234,7 @@ def select_sub_group(raw, clade_region_pairs, positions):
 
     return all_prof
 
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('-t', dest='type', type=str, required=True)
@@ -184,8 +256,11 @@ def main():
         clade_specificity(cmd_args.num_shuffle, all_prof, positions)
     elif cmd_args.type == 'position':
         pos_specificity(cmd_args.num_shuffle, all_prof)
+    elif cmd_args.type == 'clade and region':
+        clade_and_region_specificity(cmd_args.num_shuffle, all_prof, positions, cmd_args.clade_region_pairs)
     else:
         raise Exception('invalid input')
+
 
 if __name__ == '__main__':
     main()

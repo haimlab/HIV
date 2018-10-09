@@ -30,6 +30,7 @@ class FitResult:
     def calc_distr(self, year):
         return year * self.slope + self.y_intercept
 
+
 # calculate r square value of a linear regression, referencing following site
 # https://en.wikipedia.org/wiki/Coefficient_of_determination#Definitions
 def calc_r_squared(slope, y_intercept, x_data, y_data):
@@ -70,7 +71,6 @@ def calcFit(profile, skip=[]):
             if arr[i] != arr[i + 1]:
                 return False
         return True
-
 
     distr_copy = copy(profile.distr)
     num_iso_copy = copy(profile.distr)
