@@ -1,17 +1,18 @@
 import csv
 from copy import deepcopy
 from constants import FilterProperties, Clade, Region, AminoAcid
-from os.path import join
+from os.path import join, basename
 from os import listdir
 from random import randint
 from math import log10
 
 AMINO_ACID = 0
 PERCENTAGE = 1
-DYNAMIC_DATA_FOLDER_NAME = 'data\\dynamic'
-STATIC_DATA_FOLDER_NAME = 'data\\static'
-CONTEMP_PREDICTION_DATA_FOLDER_NAME = 'data\\contemporary_prediction'
+DYNAMIC_DATA_FOLDER_NAME = join('data', 'dynamic')
+STATIC_DATA_FOLDER_NAME = join('data', 'static')
+CONTEMP_PREDICTION_DATA_FOLDER_NAME = join('data', 'contemporary_prediction')
 LOG_ZERO_DEFAULT = 0.1
+
 
 # TODO add option of parsing selected subset of input files only, given clade, region, position
 # TODO add distance member method to profile class
@@ -222,7 +223,8 @@ class DynamicProfile(Profile):
 
 # get clade, country, position and return as according enums
 def parse_file_name(fileName):
-    fileName = fileName[fileName.rfind('\\') + 1:]
+    fileName = basename(fileName)
+    # fileName = fileName[fileName.rfind('\\') + 1:]
     [clade, region, position] = fileName.split('_')
     position = int(position[:position.rfind('.')])  # remove file extension
     return Clade(clade), Region(region), position

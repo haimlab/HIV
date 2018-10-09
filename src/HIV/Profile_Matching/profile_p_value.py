@@ -187,5 +187,6 @@ def main():
     else:
         raise Exception('invalid input')
 
+
 if __name__ == '__main__':
     main()
