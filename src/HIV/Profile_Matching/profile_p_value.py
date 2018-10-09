@@ -122,28 +122,44 @@ def clade_and_region_specificty_helper(all_profiles, positions, cur_pos, pairs):
     pos_sub = all_profiles.filter(cur_pos)
     pos_centroid = calc_centroid(pos_sub)
 
+    # convert string pairs into constants
     pairs_2 = [s.split(',') for s in pairs]
     flat_pairs = [(constants.Clade(c), constants.Region(r)) for [c, r] in pairs_2]
-    distances = []
+    clades = set()
+    regions = set()
     for clade, region in flat_pairs:
-        cr_sub = pos_sub.filter(clade).filter(region)
-        try:
-            p = cr_sub.get_only_profile()
-        except Exception as e:
-            if str(e) == 'cannot find single profile':
-                if cur_pos == 295 and clade == constants.Clade.C:
+        clades.add(clade)
+        regions.add(region)
+
+    distances = []
+    for clade in clades:
+        for region in regions:
+            cr_sub = pos_sub.filter(clade).filter(region)
+            try:
+                p = cr_sub.get_only_profile()
+            except Exception as e:
+                if str(e) == 'cannot find single profile':
+                    # since C 295 and AE 332 are always discarded, after shuffling,
+                    # some other clade position combination will guarentee to be missing
+                    # so we cannot be certain which ones will be available but to catch
+                    # all these exceptions and ignore them
                     continue
-                elif cur_pos == 332 and clade == constants.Clade.AE:
-                    continue
+                    # if cur_pos == 295 and clade == constants.Clade.C:
+                    #     continue
+                    # elif cur_pos == 332 and clade == constants.Clade.AE:
+                    #     continue
+                    # else:
+                    #     raise e
                 else:
                     raise e
-            else:
-                raise e
-        profile_centroid = {}
-        for aa in constants.AminoAcid:
-            profile_centroid[aa] = p.get_distr(aa)
-        distances.append(euc_dist(pos_centroid, profile_centroid))
-    avg_dist_within = sum(distances) / len(distances)
+            profile_centroid = {}
+            for aa in constants.AminoAcid:
+                profile_centroid[aa] = p.get_distr(aa)
+            distances.append(euc_dist(pos_centroid, profile_centroid))
+    try:
+        avg_dist_within = sum(distances) / len(distances)
+    except ZeroDivisionError:
+        return None
 
     cent_list = [positional_centroids[i] for i in positional_centroids]
     avg_dist_without = avg_centroid_2(pos_centroid, cent_list)
@@ -156,21 +172,26 @@ def clade_and_region_specificity(num_shuffle, all_profiles, positions, pairs):
 
     for p in positions:
         std_rat = clade_and_region_specificty_helper(all_profiles, positions, p, pairs)
-        all_prof_copy = deepcopy(all_profiles)
         num_above = 0
         num_below = 0
+        num_skipped = 0
         for _ in range(0, num_shuffle):
-            all_prof_copy.shuffle(FilterProperties.POSITION)
-            rand_rat = clade_and_region_specificty_helper(all_prof_copy, positions, p, pairs)
+            shuffled = all_profiles.shuffle(FilterProperties.POSITION)
+            rand_rat = clade_and_region_specificty_helper(shuffled, positions, p, pairs)
+            if rand_rat is None:
+                num_skipped += 1
+                continue
             if rand_rat > std_rat:
                 num_above += 1
             elif rand_rat < std_rat:
-                num_below -= 1
+                num_below += 1
 
+        print(f'skipped: {num_skipped}')
         try:
             print(f'position: {p}, p-value: {num_below / num_above}')
         except ZeroDivisionError:
             print(f'position: {p}, zero div')
+            print(f'std ratio: {std_rat}')
 
 
 def clade_specificity(num_shuffle, all_profiles, positions):

@@ -2,6 +2,7 @@ import unittest
 
 import file_parse
 import constants
+from os.path import join
 
 
 class TestFileParse(unittest.TestCase):
@@ -10,16 +11,16 @@ class TestFileParse(unittest.TestCase):
 
         # positive cases
         sol = constants.Clade.C, constants.Region.EU, 1000
-        self.assertEqual(file_parse.parse_file_name('data\\static\\C_EU_1000.csv'), sol)
+        self.assertEqual(file_parse.parse_file_name(join('data', 'static', 'C_EU_1000.csv')), sol)
         sol = constants.Clade.AE, constants.Region.BRAZIL, 123
-        self.assertEqual(file_parse.parse_file_name('data\\static\\AE_BRAZIL_123.csv'), sol)
+        self.assertEqual(file_parse.parse_file_name(join('data', 'static', 'AE_BRAZIL_123.csv')), sol)
 
         # negative cases
-        self.assertRaises(ValueError, file_parse.parse_file_name, 'balh\\JACK_BRAZIL_234.csv')
-        self.assertRaises(ValueError, file_parse.parse_file_name, 'blah\\AE_THISISSPARTA!_123.csv')
+        self.assertRaises(ValueError, file_parse.parse_file_name, 'not-exist-dir')
+        self.assertRaises(ValueError, file_parse.parse_file_name, 'not-exist-dir')
 
     def test_read_static(self):
-        file_name = 'data\\static\\A1_ALL_295.csv'
+        file_name = join('data', 'static', 'A1_ALL_295.csv')
         profile = file_parse.read_static(file_name)
 
         self.assertEqual(profile.clade(), constants.Clade.A1)
