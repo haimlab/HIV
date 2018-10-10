@@ -4,9 +4,9 @@ import constants
 import profile_p_value
 
 
-class TestStringMethods(unittest.TestCase):
+class TestProfilePValue(unittest.TestCase):
 
-    def test_parse_file_name(self):
+    def test_select_sub_group(self):
 
         all_prof = file_parse.get_all_static_profiles()
         sub_prof = profile_p_value.select_sub_group(all_prof, ['B,NA', 'C,EU', 'AE,TH'], [295, 667])
@@ -19,18 +19,18 @@ class TestStringMethods(unittest.TestCase):
                 p.clade() == constants.Clade.AE and p.region() == constants.Region.TH
             )
 
-    def test_select_sub_group(self):
+    def test_select_sub_group_exclusions(self):
 
         all_prof = file_parse.get_all_static_profiles()
         sub_prof = profile_p_value.select_sub_group(all_prof, ['C,EU', 'AE,TH'], [295, 332, 392])
-        count_C = 0
-        count_AE = 0
+        num_c = 0
+        num_ae = 0
         for p in sub_prof.get_all_profiles():
             if p.clade() == constants.Clade.C:
                 self.assertTrue(p.position() != 295)
-                count_C += 1
+                num_c += 1
             if p.clade() == constants.Clade.AE:
                 self.assertTrue(p.position() != 332)
-                count_AE += 1
-        self.assertEqual(count_AE, 2)
-        self.assertEqual(count_C, 2)
+                num_ae += 1
+        self.assertEqual(num_ae, 2)
+        self.assertEqual(num_c, 2)
