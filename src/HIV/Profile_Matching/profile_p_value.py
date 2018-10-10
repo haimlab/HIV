@@ -168,7 +168,6 @@ def clade_and_region_specificty_helper(all_profiles, positions, cur_pos, pairs):
 
 
 def clade_and_region_specificity(num_shuffle, all_profiles, positions, pairs):
-    all_profiles = all_profiles.log_convert()
 
     for p in positions:
         std_rat = clade_and_region_specificty_helper(all_profiles, positions, p, pairs)
@@ -195,29 +194,26 @@ def clade_and_region_specificity(num_shuffle, all_profiles, positions, pairs):
 
 
 def clade_specificity(num_shuffle, all_profiles, positions):
-
-    # get starting data, and get sub-groups by position
-    all_profiles = all_profiles.log_convert()
-
     for pos in positions:
         sub = all_profiles.filter(pos)
-
-        # non-shuffled ratio
         std_rat = ratio(sub, FilterProperties.CLADE)
-
-        shuffled_rat = []
+        num_above = 0
+        num_below = 0
+        num_equal = 0
         for i in range(0, num_shuffle):
             shuffled_prof = sub.shuffle(FilterProperties.CLADE)
-            shuffled_rat.append(ratio(shuffled_prof, FilterProperties.CLADE))
-
-        print('position: ' + str(pos))
-        print(calc_p(std_rat, shuffled_rat))
+            r = ratio(shuffled_prof, FilterProperties.CLADE)
+            if r > std_rat:
+                num_above += 1
+            elif r < std_rat:
+                num_below += 1
+            else:
+                num_equal += 1
+        print(f'position: {pos}, p-value: {num_below / num_above}')
+        print(f'below: {num_below}, above: {num_above}, equal: {num_equal}')
 
 
 def pos_specificity(num_shuffle, all_profiles):
-
-    # get starting data, and get sub-groups by position
-    all_profiles = all_profiles.log_convert()
 
     # non-shuffled ratio
     std_rat = ratio(all_profiles, FilterProperties.POSITION)
@@ -277,7 +273,6 @@ def specificity_one_round(all_profiles, group_by_type, cur_prop_val):
 
 def specificity(num_shuffle, all_profiles, group_by_type, properties_to_shuffle):
 
-    all_profiles = all_profiles.log_convert()
     group_by_properties = all_profiles.attr_list(group_by_type)
 
     for prop in group_by_properties:
@@ -295,14 +290,19 @@ def specificity(num_shuffle, all_profiles, group_by_type, properties_to_shuffle)
                 num_below += 1
         try:
             print(f'{prop}: p-value: {num_below / num_above}')
+            print(f'times shuffled: {num_shuffle}, un-shuffled ratio: {std_rat}')
+            print(f'above: {num_above}, below: {num_below}, dropped: {num_shuffle - num_above - num_below}')
         except ZeroDivisionError:
             print(f'{prop}: p-value: zero division')
 
 
+def corrected_position_specificity(num_shuffle, all_profiles):
+    specificity(num_shuffle, all_profiles, FilterProperties.POSITION, FilterProperties.POSITION)
+
+
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-s', nargs='+', dest='shuffle_type', type=str, required=True)
-    parser.add_argument('-g', dest='group_type', type=str, required=True)
+    parser.add_argument('-t', dest='type', type=str, required=True)
     parser.add_argument('-n', dest='num_shuffle', type=int, required=True)
     parser.add_argument('-e', dest='epitope', type=str, required=True)
     parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True)
@@ -316,20 +316,21 @@ def main():
         raise Exception('invalid epitope type')
 
     all_prof = select_sub_group(get_all_static_profiles(), cmd_args.clade_region_pairs, positions)
+    all_prof = all_prof.log_convert()
 
-    # if cmd_args.type == 'clade':
-    #     clade_specificity(cmd_args.num_shuffle, all_prof, positions)
-    # elif cmd_args.type == 'position':
-    #     pos_specificity(cmd_args.num_shuffle, all_prof)
+    if cmd_args.type == 'clade':
+        clade_specificity(cmd_args.num_shuffle, all_prof, positions)
+    elif cmd_args.type == 'position':
+        pos_specificity(cmd_args.num_shuffle, all_prof)
     # elif cmd_args.type == 'clade and region':
     #     clade_and_region_specificity(cmd_args.num_shuffle, all_prof, positions, cmd_args.clade_region_pairs)
-    # else:
-    #     raise Exception('invalid input')
+    else:
+        raise Exception('invalid input')
 
-    group_type = FilterProperties(cmd_args.group_type)
-    shuffle_type = [FilterProperties(p) for p in cmd_args.shuffle_type]
-
-    specificity(cmd_args.num_shuffle, all_prof, group_type, shuffle_type)
+    # group_type = FilterProperties(cmd_args.group_type)
+    # shuffle_type = [FilterProperties(p) for p in cmd_args.shuffle_type]
+    #
+    # specificity(cmd_args.num_shuffle, all_prof, group_type, shuffle_type)
 
 
 if __name__ == '__main__':
