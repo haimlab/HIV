@@ -1,9 +1,9 @@
 import csv
+import random
 from copy import deepcopy
 from constants import FilterProperties, Clade, Region, AminoAcid
 from os.path import join, basename
 from os import listdir
-from random import randint
 from math import log10
 
 AMINO_ACID = 0
@@ -49,6 +49,9 @@ class Profile:
 
     def region(self):
         return self.__region
+
+    def set_region(self, region):
+        self.__region = region
 
 
 class AllProfiles:
@@ -113,11 +116,16 @@ class AllProfiles:
             labels = [p.clade() for p in self.get_all_profiles()]
         elif prop == FilterProperties.POSITION:
             labels = [p.position() for p in self.get_all_profiles()]
+        elif prop == FilterProperties.REGION:
+            labels = [p.region() for p in self.get_all_profiles()]
         else:
             raise Exception('Unimplemented shuffle property')
         shuffled_labels = []
+        # so that we don't shuffle things back to previous orders when
+        # we do two multiple shuffles in a row
+        random.seed()
         while len(labels) > 0:
-            ind = randint(0, len(labels) - 1)
+            ind = random.randint(0, len(labels) - 1)
             shuffled_labels.append(labels[ind])
             del labels[ind]
         shuffled = deepcopy(self)
@@ -126,6 +134,11 @@ class AllProfiles:
                 prof.set_clade(new_prop)
             elif prop == FilterProperties.POSITION:
                 prof.set_position(new_prop)
+            elif prop == FilterProperties.REGION:
+                prof.set_region(new_prop)
+            else:
+                raise Exception('unimplemented shuffle property')
+        # print('shuffle finished')
         return shuffled
 
 

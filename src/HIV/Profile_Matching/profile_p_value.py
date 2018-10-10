@@ -256,9 +256,53 @@ def select_sub_group(raw, clade_region_pairs, positions):
     return all_prof
 
 
+# input profiles should already be shuffled
+def specificity_one_round(all_profiles, group_by_type, cur_prop_val):
+
+    # calculate distance without (distance relative to other sub groups)
+    all_centroids = calc_all_centroids(all_profiles, group_by_type)
+    cur_centroid = all_centroids[cur_prop_val]
+    del all_centroids[cur_prop_val]
+    dist_without = sum([euc_dist(cur_centroid, all_centroids[c]) for c in all_centroids]) / len(all_centroids)
+    # print(f'dist without: {dist_without}')
+
+    # calculate distance within
+    sub_profiles = all_profiles.filter(cur_prop_val)
+    total = sum([euc_dist(cur_centroid, p.get_entire_distr()) for p in sub_profiles.get_all_profiles()])
+    dist_within = total / len(sub_profiles.get_all_profiles())
+    # print(f'dist_within: {dist_within}')
+
+    return dist_within / dist_without
+
+
+def specificity(num_shuffle, all_profiles, group_by_type, properties_to_shuffle):
+
+    all_profiles = all_profiles.log_convert()
+    group_by_properties = all_profiles.attr_list(group_by_type)
+
+    for prop in group_by_properties:
+        std_rat = specificity_one_round(all_profiles, group_by_type, prop)
+        num_above = 0
+        num_below = 0
+        for _ in range(0, num_shuffle):
+            shuffled_profiles = all_profiles
+            for p2shuffle in properties_to_shuffle:
+                shuffled_profiles = shuffled_profiles.shuffle(p2shuffle)
+            shuffled_rat = specificity_one_round(shuffled_profiles, group_by_type, prop)
+            if shuffled_rat > std_rat:
+                num_above += 1
+            elif shuffled_rat < std_rat:
+                num_below += 1
+        try:
+            print(f'{prop}: p-value: {num_below / num_above}')
+        except ZeroDivisionError:
+            print(f'{prop}: p-value: zero division')
+
+
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-t', dest='type', type=str, required=True)
+    parser.add_argument('-s', nargs='+', dest='shuffle_type', type=str, required=True)
+    parser.add_argument('-g', dest='group_type', type=str, required=True)
     parser.add_argument('-n', dest='num_shuffle', type=int, required=True)
     parser.add_argument('-e', dest='epitope', type=str, required=True)
     parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True)
@@ -273,14 +317,19 @@ def main():
 
     all_prof = select_sub_group(get_all_static_profiles(), cmd_args.clade_region_pairs, positions)
 
-    if cmd_args.type == 'clade':
-        clade_specificity(cmd_args.num_shuffle, all_prof, positions)
-    elif cmd_args.type == 'position':
-        pos_specificity(cmd_args.num_shuffle, all_prof)
-    elif cmd_args.type == 'clade and region':
-        clade_and_region_specificity(cmd_args.num_shuffle, all_prof, positions, cmd_args.clade_region_pairs)
-    else:
-        raise Exception('invalid input')
+    # if cmd_args.type == 'clade':
+    #     clade_specificity(cmd_args.num_shuffle, all_prof, positions)
+    # elif cmd_args.type == 'position':
+    #     pos_specificity(cmd_args.num_shuffle, all_prof)
+    # elif cmd_args.type == 'clade and region':
+    #     clade_and_region_specificity(cmd_args.num_shuffle, all_prof, positions, cmd_args.clade_region_pairs)
+    # else:
+    #     raise Exception('invalid input')
+
+    group_type = FilterProperties(cmd_args.group_type)
+    shuffle_type = [FilterProperties(p) for p in cmd_args.shuffle_type]
+
+    specificity(cmd_args.num_shuffle, all_prof, group_type, shuffle_type)
 
 
 if __name__ == '__main__':
