@@ -87,5 +87,16 @@ class TestFileParse(unittest.TestCase):
             shuffled_dict[b.clade()] += 1
         self.assertEqual(all_dict, shuffled_dict)
 
-
-
+    def test_log_convert(self):
+        p = file_parse.StaticProfile(
+            constants.Clade.A1,
+            constants.Region.ALL,
+            100
+        )
+        p.add_dist(constants.AminoAcid.A, 20)
+        p.add_dist(constants.AminoAcid.C, 0)
+        p.add_dist(constants.AminoAcid.D, 100)
+        p = p.log_convert()
+        self.assertAlmostEqual(2.301, p.get_distr(constants.AminoAcid.A), delta=0.01)
+        self.assertEqual(0, p.get_distr(constants.AminoAcid.C))
+        self.assertAlmostEqual(3, p.get_distr(constants.AminoAcid.D), delta=0.01)
