@@ -100,3 +100,24 @@ class TestFileParse(unittest.TestCase):
         self.assertAlmostEqual(2.301, p.get_distr(constants.AminoAcid.A), delta=0.01)
         self.assertEqual(0, p.get_distr(constants.AminoAcid.C))
         self.assertAlmostEqual(3, p.get_distr(constants.AminoAcid.D), delta=0.01)
+
+    def test_attr_list(self):
+
+        # dynamic profile lists
+        p = file_parse.get_all_dynamic_profiles()
+        expected = [
+            constants.Clade.A1,
+            constants.Clade.AE,
+            constants.Clade.B,
+            constants.Clade.C
+        ]
+        attrs = p.attr_list(constants.FilterProperties.CLADE)
+        self.assertCountEqual(expected, attrs)
+
+        # static profile lists
+        p = file_parse.get_all_static_profiles()
+        p = p.filter(constants.Region.EU, constants.Clade.B)
+        attrs = p.attr_list(constants.FilterProperties.REGION)
+        self.assertCountEqual([constants.Region.EU], attrs)
+        attrs = p.attr_list(constants.FilterProperties.CLADE)
+        self.assertCountEqual([constants.Clade.B], attrs)
