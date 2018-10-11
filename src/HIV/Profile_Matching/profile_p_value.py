@@ -55,52 +55,39 @@ def euc_dist(p1, p2):
     return (sum([(a - b) ** 2 for a, b in zip(p1, p2)])) ** .5
 
 
-# return {clade, region -> distance}
-# centroids: {clade -> {aa -> centroid_val}}
-def quantify_distances(centroids, all_profiles):
-    distances = {}
+def clade_specificity_one_round(profs):
+
+    # compute distance within
+    centroids = calc_all_centroids(profs, FilterProperties.CLADE)
+    distances = []
     for prop in centroids:
-        sub_profiles = all_profiles.filter(prop)
-        centroid = centroids[prop]
-        for prof in sub_profiles.get_all_profiles():
-            distr = prof.get_entire_distr()
-            distances[(prop, prof.region())] = euc_dist(centroid, distr)
-    return distances
+        sub_profiles = profs.filter(prop)
+        c = centroids[prop]
+        for p in sub_profiles.get_all_profiles():
+            distances.append(euc_dist(c, p.get_entire_distr()))
+    dist_within = sum(distances) / len(distances)
 
-
-# average distance between all centroids
-# input {clade -> {aa -> centroid_val}}
-def avg_centroid(centroids):
+    # comopute distance without
     c_list = [centroids[prop] for prop in centroids]
-    dist_list = []
+    distances = []
     for i in range(0, len(c_list)):
-        c = c_list[i]
-        for j in range(0, len(c_list)):
-            if j != i:
-                dist_list.append(euc_dist(c, c_list[j]))
-    return sum(dist_list) / len(dist_list)
+        for j in range(i + 1, len(c_list)):
+            distances.append(euc_dist(c_list[i], c_list[j]))
+    dist_without = sum(distances) / len(distances)
 
-
-# calculates the ratio of average distance between all centroids and average distance between all centriods
-# and their sub-regions.
-def ratio(profs, prop_type):
-    all_centroids = calc_all_centroids(profs, prop_type)  # compute all centroids
-    distances = quantify_distances(all_centroids, profs)  # compute distances of group members to centorids
-    avg_dist_sub_group = sum([distances[key] for key in distances]) / len(distances)
-    avg_centroid_dist = avg_centroid(all_centroids)  # average distance between all centroids
-    return avg_centroid_dist / avg_dist_sub_group
+    return dist_within / dist_without
 
 
 def clade_specificity(num_shuffle, all_profiles, positions):
     for pos in positions:
         sub = all_profiles.filter(pos)
-        std_rat = ratio(sub, FilterProperties.CLADE)
+        std_rat = clade_specificity_one_round(sub)
         num_above = 0
         num_below = 0
         num_equal = 0
         for i in range(0, num_shuffle):
             shuffled_prof = sub.shuffle(FilterProperties.CLADE)
-            r = ratio(shuffled_prof, FilterProperties.CLADE)
+            r = clade_specificity_one_round(shuffled_prof)
             if r > std_rat:
                 num_above += 1
             elif r < std_rat:
@@ -138,10 +125,10 @@ def select_sub_group(raw, clade_region_pairs, positions):
 
 
 # input profiles should already be shuffled
-def specificity_one_round(all_profiles, group_by_type, cur_prop_val):
+def position_specificity_one_round(all_profiles, cur_prop_val):
 
     # calculate distance without (distance relative to other sub groups)
-    all_centroids = calc_all_centroids(all_profiles, group_by_type)
+    all_centroids = calc_all_centroids(all_profiles, FilterProperties.POSITION)
     cur_centroid = all_centroids[cur_prop_val]
     del all_centroids[cur_prop_val]
     dist_without = sum([euc_dist(cur_centroid, all_centroids[c]) for c in all_centroids]) / len(all_centroids)
@@ -154,33 +141,27 @@ def specificity_one_round(all_profiles, group_by_type, cur_prop_val):
     return dist_within / dist_without
 
 
-def specificity(num_shuffle, all_profiles, group_by_type, properties_to_shuffle):
+def position_specificity(num_shuffle, all_profiles):
 
-    group_by_properties = all_profiles.attr_list(group_by_type)
+    positions = all_profiles.attr_list(FilterProperties.POSITION)
 
-    for prop in group_by_properties:
-        std_rat = specificity_one_round(all_profiles, group_by_type, prop)
+    for p in positions:
+        std_rat = position_specificity_one_round(all_profiles, p)
         num_above = 0
         num_below = 0
         for _ in range(0, num_shuffle):
-            shuffled_profiles = all_profiles
-            for p in properties_to_shuffle:
-                shuffled_profiles = shuffled_profiles.shuffle(p)
-            shuffled_rat = specificity_one_round(shuffled_profiles, group_by_type, prop)
+            shuffled_profiles = all_profiles.shuffle(FilterProperties.POSITION)
+            shuffled_rat = position_specificity_one_round(shuffled_profiles, p)
             if shuffled_rat > std_rat:
                 num_above += 1
             elif shuffled_rat < std_rat:
                 num_below += 1
         try:
-            print(f'{prop}: p-value: {num_below / num_above}')
+            print(f'{p}: p-value: {num_below / num_above}')
             print(f'times shuffled: {num_shuffle}, un-shuffled ratio: {std_rat}')
             print(f'above: {num_above}, below: {num_below}, dropped: {num_shuffle - num_above - num_below}')
         except ZeroDivisionError:
-            print(f'{prop}: p-value: zero division')
-
-
-def corrected_position_specificity(num_shuffle, all_profiles):
-    specificity(num_shuffle, all_profiles, FilterProperties.POSITION, [FilterProperties.POSITION])
+            print(f'{p}: p-value: zero division')
 
 
 def main():
@@ -204,16 +185,9 @@ def main():
     if cmd_args.type == 'clade':
         clade_specificity(cmd_args.num_shuffle, all_prof, positions)
     elif cmd_args.type == 'position':
-        corrected_position_specificity(cmd_args.num_shuffle, all_prof)
-    # elif cmd_args.type == 'clade and region':
-    #     clade_and_region_specificity(cmd_args.num_shuffle, all_prof, positions, cmd_args.clade_region_pairs)
+        position_specificity(cmd_args.num_shuffle, all_prof)
     else:
-        raise Exception('invalid input')
-
-    # group_type = FilterProperties(cmd_args.group_type)
-    # shuffle_type = [FilterProperties(p) for p in cmd_args.shuffle_type]
-    #
-    # specificity(cmd_args.num_shuffle, all_prof, group_type, shuffle_type)
+        raise Exception('invalid')
 
 
 if __name__ == '__main__':
