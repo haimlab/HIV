@@ -6,7 +6,6 @@ from constants import FilterProperties
 from argparse import ArgumentParser
 
 
-# output type {prop_type - {amino acid -> percentage}
 def calc_all_centroids(all_profiles, prop_type):
     centroids = {}
     props = all_profiles.attr_list(prop_type)
@@ -14,7 +13,7 @@ def calc_all_centroids(all_profiles, prop_type):
         sub = all_profiles.filter(p)
         centroid = calc_centroid(sub)
         centroids[p] = centroid
-    return centroids
+    return centroids  # {prop_type - {amino acid -> percentage}
 
 
 # calculate centroid using mean of each dimension
@@ -67,7 +66,7 @@ def clade_specificity_one_round(profs):
             distances.append(euc_dist(c, p.get_entire_distr()))
     dist_within = sum(distances) / len(distances)
 
-    # comopute distance without
+    # compute distance without
     c_list = [centroids[prop] for prop in centroids]
     distances = []
     for i in range(0, len(c_list)):
@@ -99,18 +98,13 @@ def clade_specificity(num_shuffle, all_profiles, positions):
 
 
 def select_sub_group(raw, clade_region_pairs, positions):
-    # parse input clade, region pairs
     pairs = []
     for p in clade_region_pairs:
         [c, r] = p.split(',')
         pairs.append((constants.Clade(c), constants.Region(r)))
-
-    # combine clade, region, position and make a list of filters
     filters = []
     for p in positions:
-        filters += [(p,) + i for i in pairs]
-
-    # use filter to grab all desired sub profiles
+        filters += [(p, c, r) for c, r in pairs]
     all_prof = AllStaticProfiles()
     for f in filters:
         sub = raw.filter(*f).get_all_profiles()
@@ -120,7 +114,6 @@ def select_sub_group(raw, clade_region_pairs, positions):
             if s.clade() == constants.Clade.AE and s.position() == 332:
                 continue
             all_prof.add_profile(s)
-
     return all_prof
 
 
