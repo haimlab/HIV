@@ -13,9 +13,11 @@ from constants import AminoAcid
 from csv import reader
 from random import sample
 from profile_p_value import euc_dist
+from argparse import ArgumentParser
+from os.path import join
 
 
-FILE_NAME = 'data/convergence/BNA_panel_for_convergence.csv'
+FILE_DIR = 'data/convergence'
 
 
 # compute profile from all given envelopes
@@ -42,14 +44,14 @@ def get_shuffle_profiles(n, fn, pos):
 
 # read the nth hundred samples in given position, in historical order, from given envelope table
 # and calculate their centroid (which is basically the profile)
-def read_nth_hundred(f_name, pos, n):
+def read_nth_group(f_name, pos, n, group_size):
     with open(f_name) as f:
         r = reader(f)
         first_row = next(r)
         for _ in range(0, n):
-            for _ in range(0, 100):
+            for _ in range(0, group_size):
                 next(r)
-        envs = [next(r) for _ in range(100)]
+        envs = [next(r) for _ in range(group_size)]
     return envelopes_to_profile(envs, first_row.index(str(pos)))
 
 
@@ -63,31 +65,29 @@ def get_2007_2015_centroid(fn, pos):
 
 
 def main():
+
+    parser = ArgumentParser()
+    parser.add_argument('-f', dest='file_name', type=str, required=True)
+    parser.add_argument('-g', dest='group_size', type=int, required=True)
+    cmd_args = parser.parse_args()
+    file_name = join(FILE_DIR, cmd_args.file_name)
+
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
         for n in range(0, 500):
-            rand_prof = get_shuffle_profiles(1000, FILE_NAME, pos)  # step 1, get 1000 random shuffled profiles
-            cent_07_15 = get_2007_2015_centroid(FILE_NAME, pos)  # step 2, calculate centroid of p6
+            rand_prof = get_shuffle_profiles(1000, file_name, pos)  # step 1, get 1000 random shuffled profiles
+            cent_07_15 = get_2007_2015_centroid(file_name, pos)  # step 2, calculate centroid of p6
             #  step 3, calculate distance between the 1000 random profiles and 07-15 centroid
             distances = [euc_dist(cent_07_15, i) for i in rand_prof]
             # step 4, distacne between first 100 historical envs with 07-15 cnetroid
             try:
-                dist_first_100 = euc_dist(read_nth_hundred(FILE_NAME, pos, n), cent_07_15)
+                dist_first_100 = euc_dist(read_nth_group(file_name, pos, n, cmd_args.group_size), cent_07_15)
             except StopIteration:
                 break
             # step 5, calculate the ratio as #distance which a random profile from step 1 to 07-15
             # centroid is larger than that of between first_100 envelopes and 07-15 centroid
             ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
             print(f'position: {pos}, first {n}th p-value: {ratio}')
-
-            # # these are essentailly the same as above
-            # rand_prof = get_shuffle_profiles(1000, FILE_NAME, pos)
-            # cent_07_15 = get_2007_2015_centroid(FILE_NAME, pos)
-            # distances = [euc_dist(cent_07_15, i) for i in rand_prof]
-            # # except here read the first 100 - 200
-            # dist_first_100 = euc_dist(read_nth_hundred(FILE_NAME, pos, 1), cent_07_15)
-            # ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
-            # print(f'position: {pos}, second 100 p-value: {ratio}')
 
 
 if __name__ == '__main__':
