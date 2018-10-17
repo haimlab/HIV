@@ -16,6 +16,7 @@ from profile_p_value import euc_dist
 from argparse import ArgumentParser
 from os.path import join
 from sys import float_info
+from file_parse import logConvert
 
 
 FILE_DIR = 'data/convergence'
@@ -29,7 +30,7 @@ def envelopes_to_profile(envs, i):
         count[AminoAcid(e[i])] += 1
     s = sum([count[aa] for aa in count])
     for aa in count:
-        count[aa] /= s
+        count[aa] = logConvert(count[aa] / s)
     return count
 
 
@@ -40,6 +41,7 @@ def get_shuffle_profiles(n, fn, pos):
         r = reader(f)
         fr = next(r)  # first row
         rows = list(filter(lambda row: 2007 <= int(row[fr.index('Year')]) <= 2015, r))
+        print(len(rows))
         return [envelopes_to_profile(sample(rows, 100), fr.index(str(pos))) for _ in range(n)]
 
 
@@ -72,6 +74,10 @@ def main():
     parser.add_argument('-g', dest='group_size', type=int, required=True)
     cmd_args = parser.parse_args()
     file_name = join(FILE_DIR, cmd_args.file_name)
+
+    # sanity check
+    print(f'using data from {file_name}')
+    print(f'with groups of {cmd_args.group_size}')
 
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
