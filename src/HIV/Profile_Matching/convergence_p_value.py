@@ -36,13 +36,12 @@ def envelopes_to_profile(envs, i):
 
 # step 1:
 # for n times of shuffle, compute profile of 100 randomly selected samples, collected them
-def get_shuffle_profiles(n, fn, pos):
+def get_shuffle_profiles(n, fn, pos, group_size):
     with open(fn) as f:
         r = reader(f)
         fr = next(r)  # first row
         rows = list(filter(lambda row: 2007 <= int(row[fr.index('Year')]) <= 2015, r))
-        print(len(rows))
-        return [envelopes_to_profile(sample(rows, 100), fr.index(str(pos))) for _ in range(n)]
+        return [envelopes_to_profile(sample(rows, group_size), fr.index(str(pos))) for _ in range(n)]
 
 
 # read the nth hundred samples in given position, in historical order, from given envelope table
@@ -82,7 +81,8 @@ def main():
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
         for n in range(0, int(float_info.max)):
-            rand_prof = get_shuffle_profiles(1000, file_name, pos)  # step 1, get 1000 random shuffled profiles
+            # step 1, get 1000 random shuffled profiles
+            rand_prof = get_shuffle_profiles(1000, file_name, pos, cmd_args.group_size)
             cent_07_15 = get_2007_2015_centroid(file_name, pos)  # step 2, calculate centroid of p6
             #  step 3, calculate distance between the 1000 random profiles and 07-15 centroid
             distances = [euc_dist(cent_07_15, i) for i in rand_prof]
