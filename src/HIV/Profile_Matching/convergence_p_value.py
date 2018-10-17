@@ -46,7 +46,7 @@ def read_nth_hundred(f_name, pos, n):
     with open(f_name) as f:
         r = reader(f)
         first_row = next(r)
-        for _ in range(1, n):
+        for _ in range(0, n):
             for _ in range(0, 100):
                 next(r)
         envs = [next(r) for _ in range(100)]
@@ -65,25 +65,29 @@ def get_2007_2015_centroid(fn, pos):
 def main():
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
-        rand_prof = get_shuffle_profiles(1000, FILE_NAME, pos)  # step 1, get 1000 random shuffled profiles
-        cent_07_15 = get_2007_2015_centroid(FILE_NAME, pos)  # step 2, calculate centroid of p6
-        #  step 3, calculate distance between the 1000 random profiles and 07-15 centroid
-        distances = [euc_dist(cent_07_15, i) for i in rand_prof]
-        # step 4, distacne between first 100 historical envs with 07-15 cnetroid
-        dist_first_100 = euc_dist(read_nth_hundred(FILE_NAME, pos, 1), cent_07_15)
-        # step 5, calculate the ratio as #distance which a random profile from step 1 to 07-15
-        # centroid is larger than that of between first_100 envelopes and 07-15 centroid
-        ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
-        print(f'position: {pos}, first 100 p-value: {ratio}')
+        for n in range(0, 500):
+            rand_prof = get_shuffle_profiles(1000, FILE_NAME, pos)  # step 1, get 1000 random shuffled profiles
+            cent_07_15 = get_2007_2015_centroid(FILE_NAME, pos)  # step 2, calculate centroid of p6
+            #  step 3, calculate distance between the 1000 random profiles and 07-15 centroid
+            distances = [euc_dist(cent_07_15, i) for i in rand_prof]
+            # step 4, distacne between first 100 historical envs with 07-15 cnetroid
+            try:
+                dist_first_100 = euc_dist(read_nth_hundred(FILE_NAME, pos, n), cent_07_15)
+            except StopIteration:
+                break
+            # step 5, calculate the ratio as #distance which a random profile from step 1 to 07-15
+            # centroid is larger than that of between first_100 envelopes and 07-15 centroid
+            ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
+            print(f'position: {pos}, first {n}th p-value: {ratio}')
 
-        # these are essentailly the same as above
-        rand_prof = get_shuffle_profiles(1000, FILE_NAME, pos)
-        cent_07_15 = get_2007_2015_centroid(FILE_NAME, pos)
-        distances = [euc_dist(cent_07_15, i) for i in rand_prof]
-        # except here read the first 100 - 200
-        dist_first_100 = euc_dist(read_nth_hundred(FILE_NAME, pos, 2), cent_07_15)
-        ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
-        print(f'position: {pos}, second 100 p-value: {ratio}')
+            # # these are essentailly the same as above
+            # rand_prof = get_shuffle_profiles(1000, FILE_NAME, pos)
+            # cent_07_15 = get_2007_2015_centroid(FILE_NAME, pos)
+            # distances = [euc_dist(cent_07_15, i) for i in rand_prof]
+            # # except here read the first 100 - 200
+            # dist_first_100 = euc_dist(read_nth_hundred(FILE_NAME, pos, 1), cent_07_15)
+            # ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
+            # print(f'position: {pos}, second 100 p-value: {ratio}')
 
 
 if __name__ == '__main__':
