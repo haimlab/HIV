@@ -15,6 +15,7 @@ from random import sample
 from profile_p_value import euc_dist
 from argparse import ArgumentParser
 from os.path import join
+from sys import float_info
 
 
 FILE_DIR = 'data/convergence'
@@ -74,7 +75,7 @@ def main():
 
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
-        for n in range(0, 500):
+        for n in range(0, int(float_info.max)):
             rand_prof = get_shuffle_profiles(1000, file_name, pos)  # step 1, get 1000 random shuffled profiles
             cent_07_15 = get_2007_2015_centroid(file_name, pos)  # step 2, calculate centroid of p6
             #  step 3, calculate distance between the 1000 random profiles and 07-15 centroid
