@@ -10,7 +10,7 @@ Created on Mon Jun 25 13:42:51 2018
 import xlrd
 import openpyxl
 
-#This program calculate the historical distribution of different positions' amino acids
+#This script calculate the historical distribution of different positions' amino acids
 #  STEPS:
 #1. Change the Input directory, do not delete r 
 #2. Change the Output directory, do not delete r, When you copy the address, keep in mind there's also a slash at the end.
@@ -25,20 +25,29 @@ import openpyxl
 #                                 mix:[[1979,2014],[1985,2006],[1994,2000],[2008,2008]]
 #6. Ignore the output file named 'ignore.xlsx', feel free to delete it
 #7. run Forest run!
-Input = r"/Users/Han/Documents/Haim Lab(2018 summer)/Historical Distribution/6.25.18 Clade B Historical Distribution Data.xlsx"
-Output = r"/Users/Han/Documents/Haim Lab(2018 summer)/locationTest/"
-OutputName = "distribution.xlsx"
-PositionRange= [[88,88],[197,339]]
-YearRange = [[1981,1983],[1979,2001],[2004,2013],[1981,1981]]
-##################################################################
-##################################################################
-##################################################################
-##################################################################
-##################################################################
+Input = r"/Users/Han/Documents/Haim Lab(2018 summer)/10.12/C_SAECA 10 100.xlsx" 
+Output = r"/Users/Han/Documents/Haim Lab(2018 summer)/10.12/C_SAECA/"
+OutputName = "10.xlsx" 
+TabNumber = 9
+PositionRange = [[295,295],[332,332],[339,339],[392,392],[448,448]]
+#pngs:[[88,88],[156,156],[160,160],[197,197],[230,230],[234,234],[241,141],[262,262],
+######[276,276],[289,289],[295,295],[301,301],[332,332],[339,339],[356,356],[362,362],[386,386],
+######[392,392],[448,448],[133,133],[137,137],[185,185],[355,355],[398,398],[406,406],[411,411],[462,462]]
+#2g12: [[295,295],[332,332],[339,339],[392,392],[448,448]]
+#2F5: [[662,662],[663,663],[664,664],[665,665],[667,667]]
+YearRange = [[2009,2014]] 
+# Clade B: [[1979,1986],[1987,1994],[1995,1999],[2000,2004],[2005,2009],[2010,2015]] 
+# Clade C: [[1986,1994],[1995,1999],[2000,2004],[2005,2009],[2010,2015]] 
+# B_Korea: [[1991,1996],[1997,2000],[2001,2004],[2005,2009]]
+####################################################################################################################################
+####################################################################################################################################
+####################################################################################################################################
+####################################################################################################################################
+####################################################################################################################################
 #Code:
 
 workbook = xlrd.open_workbook(Input)
-sheet = workbook.sheet_by_index(0)
+sheet = workbook.sheet_by_index(TabNumber)
 nRows = sheet.nrows
 nCols = sheet.ncols
 
@@ -134,7 +143,7 @@ def writeFile():
                     rCount = rCount + 1
                 rCount = 1
                 cCount = cCount + 1
-    wb.save(Output+"ignore.xlsx")
+    wb.save(Output+"Ignore.xlsx")
     
 writeFile()
 
@@ -153,7 +162,8 @@ def GetColIndexData2(x):
     return col
 
 def Count():
-    name = ['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','Z']
+    #name = ['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','Z']
+    name = ['Z','N','T','S','D','E','K','R','H','Y','Q','I','L','V','A','C','F','G','M','P','W']
     final = []
     for col in range(nCols2):
         colCount = []
