@@ -17,10 +17,8 @@ LOG_ZERO_DEFAULT = 0.1
 # TODO add option of parsing selected subset of input files only, given clade, region, position
 # TODO add distance member method to profile class
 def logConvert(val):
-    if val == 0:
-        return 0
-    else:
-        return log10(val) - log10(LOG_ZERO_DEFAULT)
+    val = log10(LOG_ZERO_DEFAULT) if val < LOG_ZERO_DEFAULT else log10(val)
+    return val - log10(LOG_ZERO_DEFAULT)
 
 
 class Profile:
