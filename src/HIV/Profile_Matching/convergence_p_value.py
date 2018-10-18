@@ -80,6 +80,7 @@ def main():
 
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
+        print(f'position: {pos}')
         for n in range(0, int(float_info.max)):
             # step 1, get 1000 random shuffled profiles
             rand_prof = get_shuffle_profiles(1000, file_name, pos, cmd_args.group_size)
@@ -94,7 +95,8 @@ def main():
             # step 5, calculate the ratio as #distance which a random profile from step 1 to 07-15
             # centroid is larger than that of between first_100 envelopes and 07-15 centroid
             ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
-            print(f'position: {pos}, first {n}th p-value: {ratio}')
+            print(f'{n * cmd_args.group_size}-{n*cmd_args.group_size + cmd_args.group_size}: {ratio}')
+        print()
 
 
 if __name__ == '__main__':
