@@ -111,7 +111,7 @@ def select_sub_group(raw, clade_region_pairs, positions):
         for s in sub:
             if s.clade() == constants.Clade.C and s.position() == 295:
                 continue
-            if s.clade() == constants.Clade.AE and s.position() == 332:
+            if s.clade() == constants.Clade.AE and (s.position() == 332 or s.position() == 339):
                 continue
             all_prof.add_profile(s)
     return all_prof
@@ -169,6 +169,8 @@ def main():
         positions = constants.POS_2G12
     elif cmd_args.epitope == '2f5':
         positions = constants.POS_2F5
+    elif cmd_args.epitope == '28':
+        positions = constants.PNGS
     else:
         raise Exception('invalid epitope type')
 
