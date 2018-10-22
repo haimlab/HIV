@@ -139,10 +139,12 @@ def position_specificity(num_shuffle, all_profiles):
     positions = all_profiles.attr_list(FilterProperties.POSITION)
 
     for p in positions:
+        print(f'position {p}')
         std_rat = position_specificity_one_round(all_profiles, p)
         num_above = 0
         num_below = 0
-        for _ in range(0, num_shuffle):
+        for i in range(0, num_shuffle):
+            print(f'shuffle {i}')
             shuffled_profiles = all_profiles.shuffle(FilterProperties.POSITION)
             shuffled_rat = position_specificity_one_round(shuffled_profiles, p)
             if shuffled_rat > std_rat:
