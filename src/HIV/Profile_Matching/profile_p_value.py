@@ -169,7 +169,7 @@ def main():
         positions = constants.POS_2G12
     elif cmd_args.epitope == '2f5':
         positions = constants.POS_2F5
-    elif cmd_args.epitope == '28':
+    elif cmd_args.epitope == 'pngs':
         positions = constants.PNGS
     else:
         raise Exception('invalid epitope type')
