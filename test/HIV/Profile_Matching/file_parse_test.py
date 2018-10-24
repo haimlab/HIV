@@ -4,6 +4,7 @@ import file_parse
 import constants
 from os.path import join
 from math import log10
+from copy import deepcopy
 
 class TestFileParse(unittest.TestCase):
 
@@ -79,7 +80,8 @@ class TestFileParse(unittest.TestCase):
 
     def test_shuffle(self):
         all_p = file_parse.get_all_static_profiles()
-        shuffled_p = all_p.shuffle(constants.FilterProperties.CLADE)
+        shuffled_p = deepcopy(all_p)
+        shuffled_p.shuffle(constants.FilterProperties.CLADE)
         all_dict = {c: 0 for c in constants.Clade}
         shuffled_dict = {c: 0 for c in constants.Clade}
         for a, b in zip(all_p.get_all_profiles(), shuffled_p.get_all_profiles()):
