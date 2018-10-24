@@ -53,13 +53,15 @@ def main():
     # compute all centroids in each period
     for p in POS_2G12:
         for (low, high), (n_b, n_c) in zip(year_ranges, num_samples):
-            for fn, n_sample in zip(file_names, [n_b, n_c]):
+            for fn in file_names:
+                n_sample = min(n_b, n_c)
                 fn = join(file_dir, fn)
                 with open(fn) as f:
                     aa_ind = next(reader(f)).index(str(p))
                 centroids_rand = []
                 candidate_profs = filter_by_year(low, high, fn)
-                for i in range(1):
+                print(f'position {p}, range: {low} - {high}, file {fn}')
+                for i in range(10000):
                     centroids_rand.append(envelopes_to_profile(sample(candidate_profs, n_sample), aa_ind))
                 centroids_list_rand = [[c[aa] for aa in AminoAcid] for c in centroids_rand]
                 cent_as_list = kmeans(asarray(centroids_list_rand), 1)[0][0]
