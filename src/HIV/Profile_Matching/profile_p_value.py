@@ -4,6 +4,7 @@ from scipy.cluster.vq import kmeans
 import constants
 from constants import FilterProperties
 from argparse import ArgumentParser
+from copy import deepcopy
 
 
 def calc_all_centroids(all_profiles, prop_type):
@@ -137,16 +138,15 @@ def position_specificity_one_round(all_profiles, cur_prop_val):
 def position_specificity(num_shuffle, all_profiles):
 
     positions = all_profiles.attr_list(FilterProperties.POSITION)
+    shuffle_copy = deepcopy(all_profiles)
 
     for p in positions:
-        print(f'position {p}')
         std_rat = position_specificity_one_round(all_profiles, p)
         num_above = 0
         num_below = 0
         for i in range(0, num_shuffle):
-            print(f'shuffle {i}')
-            shuffled_profiles = all_profiles.shuffle(FilterProperties.POSITION)
-            shuffled_rat = position_specificity_one_round(shuffled_profiles, p)
+            shuffle_copy.shuffle(FilterProperties.POSITION)
+            shuffled_rat = position_specificity_one_round(shuffle_copy, p)
             if shuffled_rat > std_rat:
                 num_above += 1
             elif shuffled_rat < std_rat:

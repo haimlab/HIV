@@ -110,34 +110,26 @@ class AllProfiles:
         return list(props)
 
     def shuffle(self, prop):
-        if prop == FilterProperties.CLADE:
-            labels = [p.clade() for p in self.get_all_profiles()]
-        elif prop == FilterProperties.POSITION:
-            labels = [p.position() for p in self.get_all_profiles()]
-        elif prop == FilterProperties.REGION:
-            labels = [p.region() for p in self.get_all_profiles()]
-        else:
-            raise Exception('Unimplemented shuffle property')
-        shuffled_labels = []
         # so that we don't shuffle things back to previous orders when
         # we do two multiple shuffles in a row
         random.seed()
-        while len(labels) > 0:
-            ind = random.randint(0, len(labels) - 1)
-            shuffled_labels.append(labels[ind])
-            del labels[ind]
-        shuffled = deepcopy(self)
-        for prof, new_prop in zip(shuffled.get_all_profiles(), shuffled_labels):
+        profs = self.get_all_profiles()
+        for i in range(len(profs) - 1):
+            j = random.randint(i, len(profs) - 1)
             if prop == FilterProperties.CLADE:
-                prof.set_clade(new_prop)
+                temp = profs[i].clade()
+                profs[i].set_clade(profs[j].clade())
+                profs[j].set_clade(temp)
             elif prop == FilterProperties.POSITION:
-                prof.set_position(new_prop)
+                temp = profs[i].position()
+                profs[i].set_position(profs[j].position())
+                profs[j].set_position(temp)
             elif prop == FilterProperties.REGION:
-                prof.set_region(new_prop)
+                temp = profs[i].region()
+                profs[i].set_region(profs[j].region)
+                profs[j].set_region(temp)
             else:
-                raise Exception('unimplemented shuffle property')
-        # print('shuffle finished')
-        return shuffled
+                raise Exception('Unimplemented shuffle property')
 
 
 class AllStaticProfiles(AllProfiles):
