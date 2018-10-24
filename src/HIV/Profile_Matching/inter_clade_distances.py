@@ -1,15 +1,18 @@
 from csv import reader
 from convergence_p_value import envelopes_to_profile
 from profile_p_value import euc_dist
-from constants import POS_2G12
+from constants import POS_2G12, AminoAcid
 from os.path import join, basename
+from random import sample
+from scipy.cluster.vq import kmeans
+from numpy import asarray
 
 
 # take a 1D list of years and put them into groups of two
 def format_period_ranges(years):
     if len(years) % 2 != 0:
         raise Exception('cannot group odd length lists')
-    return [(years[i], years[i + 1]) for i in range(len(years) - 1)]
+    return [(years[i], years[i + 1]) for i in range(0, len(years) - 1, 2)]
 
 
 # filter an input file based on year
@@ -26,15 +29,15 @@ def filter_by_year(low, high, file_name):
 def main():
     file_dir = join('data', 'inter_clade')
     file_names = ['B_NA&EU.csv', 'C_SA&ECA&EU.csv']
-    # num_samples = [
-    #     (260, 134),
-    #     (114, 144),
-    #     (136, 266),
-    #     (107, 125),
-    #     (210, 128),
-    #     (185, 177),
-    #     (170, 165)
-    # ]
+    num_samples = [
+        (260, 133),
+        (114, 144),
+        (136, 266),
+        (107, 125),
+        (210, 128),
+        (185, 177),
+        (170, 165)
+    ]
     year_ranges = format_period_ranges([
         1987, 1999,
         2000, 2002,
@@ -44,18 +47,24 @@ def main():
         2008, 2009,
         2010, 2015
     ])
+    print(year_ranges)
     centroids = {p: {y: {} for y in year_ranges} for p in POS_2G12}
 
     # compute all centroids in each period
     for p in POS_2G12:
-        for low, high in year_ranges:
-            for fn in file_names:
+        for (low, high), (n_b, n_c) in zip(year_ranges, num_samples):
+            for fn, n_sample in zip(file_names, [n_b, n_c]):
                 fn = join(file_dir, fn)
                 with open(fn) as f:
                     aa_ind = next(reader(f)).index(str(p))
-                env = envelopes_to_profile(filter_by_year(low, high, fn), aa_ind)
-                centroids[p][(low, high)][basename(fn)] = env
-
+                centroids_rand = []
+                candidate_profs = filter_by_year(low, high, fn)
+                for i in range(1):
+                    centroids_rand.append(envelopes_to_profile(sample(candidate_profs, n_sample), aa_ind))
+                centroids_list_rand = [[c[aa] for aa in AminoAcid] for c in centroids_rand]
+                cent_as_list = kmeans(asarray(centroids_list_rand), 1)[0][0]
+                cent = {aa: i for aa, i in zip(AminoAcid, cent_as_list)}
+                centroids[p][(low, high)][basename(fn)] = cent
 
     # compute distances between all centroids of the same period
     distances = {p: {y_range: {} for y_range in centroids[p]} for p in POS_2G12}
