@@ -4,6 +4,7 @@ from scipy.cluster.vq import kmeans
 import constants
 from constants import FilterProperties
 from argparse import ArgumentParser
+from copy import deepcopy
 
 
 def calc_all_centroids(all_profiles, prop_type):
@@ -111,7 +112,7 @@ def select_sub_group(raw, clade_region_pairs, positions):
         for s in sub:
             if s.clade() == constants.Clade.C and s.position() == 295:
                 continue
-            if s.clade() == constants.Clade.AE and s.position() == 332:
+            if s.clade() == constants.Clade.AE and (s.position() == 332 or s.position() == 339):
                 continue
             all_prof.add_profile(s)
     return all_prof
@@ -137,14 +138,15 @@ def position_specificity_one_round(all_profiles, cur_prop_val):
 def position_specificity(num_shuffle, all_profiles):
 
     positions = all_profiles.attr_list(FilterProperties.POSITION)
+    shuffle_copy = deepcopy(all_profiles)
 
     for p in positions:
         std_rat = position_specificity_one_round(all_profiles, p)
         num_above = 0
         num_below = 0
-        for _ in range(0, num_shuffle):
-            shuffled_profiles = all_profiles.shuffle(FilterProperties.POSITION)
-            shuffled_rat = position_specificity_one_round(shuffled_profiles, p)
+        for i in range(0, num_shuffle):
+            shuffle_copy.shuffle(FilterProperties.POSITION)
+            shuffled_rat = position_specificity_one_round(shuffle_copy, p)
             if shuffled_rat > std_rat:
                 num_above += 1
             elif shuffled_rat < std_rat:
@@ -169,6 +171,8 @@ def main():
         positions = constants.POS_2G12
     elif cmd_args.epitope == '2f5':
         positions = constants.POS_2F5
+    elif cmd_args.epitope == 'pngs':
+        positions = constants.PNGS
     else:
         raise Exception('invalid epitope type')
 

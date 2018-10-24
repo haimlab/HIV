@@ -3,7 +3,8 @@ import unittest
 import file_parse
 import constants
 from os.path import join
-
+from math import log10
+from copy import deepcopy
 
 class TestFileParse(unittest.TestCase):
 
@@ -79,7 +80,8 @@ class TestFileParse(unittest.TestCase):
 
     def test_shuffle(self):
         all_p = file_parse.get_all_static_profiles()
-        shuffled_p = all_p.shuffle(constants.FilterProperties.CLADE)
+        shuffled_p = deepcopy(all_p)
+        shuffled_p.shuffle(constants.FilterProperties.CLADE)
         all_dict = {c: 0 for c in constants.Clade}
         shuffled_dict = {c: 0 for c in constants.Clade}
         for a, b in zip(all_p.get_all_profiles(), shuffled_p.get_all_profiles()):
@@ -100,6 +102,12 @@ class TestFileParse(unittest.TestCase):
         self.assertAlmostEqual(2.301, p.get_distr(constants.AminoAcid.A), delta=0.01)
         self.assertEqual(0, p.get_distr(constants.AminoAcid.C))
         self.assertAlmostEqual(3, p.get_distr(constants.AminoAcid.D), delta=0.01)
+
+    def test_log_convert_helper(self):
+        for i in range(11, 30):
+            self.assertEqual(0, file_parse.logConvert(1 / i))
+        for i in range(10, 100):
+            self.assertAlmostEqual(log10(i) + 1, file_parse.logConvert(i), delta=0.01)
 
     def test_attr_list(self):
 

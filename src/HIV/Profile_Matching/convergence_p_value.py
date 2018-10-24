@@ -36,11 +36,11 @@ def envelopes_to_profile(envs, i):
 
 # step 1:
 # for n times of shuffle, compute profile of 100 randomly selected samples, collected them
-def get_shuffle_profiles(n, fn, pos, group_size):
+def get_shuffle_profiles(n, fn, pos, group_size, start, end):
     with open(fn) as f:
         r = reader(f)
         fr = next(r)  # first row
-        rows = list(filter(lambda row: 2007 <= int(row[fr.index('Year')]) <= 2015, r))
+        rows = list(filter(lambda row: start <= int(row[fr.index('Year')]) <= end, r))
         return [envelopes_to_profile(sample(rows, group_size), fr.index(str(pos))) for _ in range(n)]
 
 
@@ -58,11 +58,11 @@ def read_nth_group(f_name, pos, n, group_size):
 
 
 # get centroid of 2007 to 2015
-def get_2007_2015_centroid(fn, pos):
+def get_last_p_centroid(fn, pos, start, end):
     with open(fn) as f:
         r = reader(f)
         fr = next(r)  # first row
-        rows = list(filter(lambda row: 2007 <= int(row[fr.index('Year')]) <= 2015, r))
+        rows = list(filter(lambda row: start <= int(row[fr.index('Year')]) <= end, r))
     return envelopes_to_profile(rows, fr.index(str(pos)))
 
 
@@ -71,30 +71,36 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('-f', dest='file_name', type=str, required=True)
     parser.add_argument('-g', dest='group_size', type=int, required=True)
+    parser.add_argument('-s', dest='start', type=int, required=True)
+    parser.add_argument('-e', dest='end', type=int, required=True)
     cmd_args = parser.parse_args()
     file_name = join(FILE_DIR, cmd_args.file_name)
 
     # sanity check
     print(f'using data from {file_name}')
     print(f'with groups of {cmd_args.group_size}')
+    print(f'with last period being {cmd_args.start}-{cmd_args.end}')
 
     positions = [295, 332, 339, 392, 448]
     for pos in positions:
+        print(f'position: {pos}')
         for n in range(0, int(float_info.max)):
             # step 1, get 1000 random shuffled profiles
-            rand_prof = get_shuffle_profiles(1000, file_name, pos, cmd_args.group_size)
-            cent_07_15 = get_2007_2015_centroid(file_name, pos)  # step 2, calculate centroid of p6
+            rand_prof = get_shuffle_profiles(1000, file_name, pos, cmd_args.group_size, cmd_args.start, cmd_args.end)
+            # step 2, calculate centroid of p6
+            cent_last_p = get_last_p_centroid(file_name, pos, cmd_args.start, cmd_args.end)
             #  step 3, calculate distance between the 1000 random profiles and 07-15 centroid
-            distances = [euc_dist(cent_07_15, i) for i in rand_prof]
+            distances = [euc_dist(cent_last_p, i) for i in rand_prof]
             # step 4, distacne between first 100 historical envs with 07-15 cnetroid
             try:
-                dist_first_100 = euc_dist(read_nth_group(file_name, pos, n, cmd_args.group_size), cent_07_15)
+                dist_first_100 = euc_dist(read_nth_group(file_name, pos, n, cmd_args.group_size), cent_last_p)
             except StopIteration:
                 break
             # step 5, calculate the ratio as #distance which a random profile from step 1 to 07-15
             # centroid is larger than that of between first_100 envelopes and 07-15 centroid
             ratio = len(list(filter(lambda x: x > dist_first_100, distances))) / 1000
-            print(f'position: {pos}, first {n}th p-value: {ratio}')
+            print(f'{n * cmd_args.group_size}-{n*cmd_args.group_size + cmd_args.group_size}: {ratio}')
+        print()
 
 
 if __name__ == '__main__':
