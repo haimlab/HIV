@@ -1,18 +1,17 @@
 """
-Approach 1 (START by using B_NA)
-STEP 1: Calculate the distribution in groups of 100 Envs randomly selected from the years 2007-2015 (repeat 1000 times).
-STEP 2: Define centroid of P6 (use all samples from P6).
-        STEP 3:  Calculate the distance between each randomly sampled distribution and the centroid of 2007-2015 (altoge
-        ther 1,000 distances will be calculated)
-STEP 4: Calculate the distance between the historically first 100 Envs (1979-~1992) and P6 centroid.
-STEP 5: Calculate ratio:  (number of random P6 distributions for which the distance is greater than P1-P6 distance)/1000
-STEP 6: Repeat the above for the second set of 100 Envs (~1993-1998).
+denote the most recent time period as p6, this is usually 2007 - 2015
+STEP 1: calculate centroids (profiles) of groups of group_size envelopes randomly selected from p6 (repeat k times).
+STEP 2: Compute centroid (profile) of p6.
+STEP 3: Calculate the distance between each randomly sampled distribution from STEP 1 and the centroid of p6.
+STEP 4: calculate the distance between historically first <group_size> envelopes and p6 centroid.
+STEP 5: Calculate ratio as (#random p6 profiles (centroids) from STEP 1 for whose distance between p6 centroid is
+        greater than that between centroid of the historical nth group and p6 centroid) / k.
+STEP 6: Repeat the above for all other non-overlapping sets of <group_size> envelopes.
 """
 
 from constants import AminoAcid
 from csv import reader, writer
 from random import sample
-
 from helpers import envelopes_to_profile
 from profile_p_value import euc_dist
 from argparse import ArgumentParser
