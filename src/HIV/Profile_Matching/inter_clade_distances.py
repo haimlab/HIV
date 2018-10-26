@@ -1,5 +1,5 @@
 from csv import reader
-from convergence_p_value import envelopes_to_profile
+from helpers import envelopes_to_profile
 from profile_p_value import euc_dist
 from constants import POS_2G12, AminoAcid
 from os.path import join, basename
