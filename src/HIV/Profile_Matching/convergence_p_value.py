@@ -56,6 +56,9 @@ def get_last_p_centroid(fn, pos, start, end):
 
 def main():
 
+    # input file format: a csv with the follwing columns, in the exact order and spelling
+    # Country, Year, Patient, Assession, 1, 2, ..., n
+    # where 1 ... n represent positions included in the input file
     parser = ArgumentParser()
     parser.add_argument('-f', dest='file_name', type=str, required=True)
     parser.add_argument('-g', dest='group_size', type=int, required=True)
