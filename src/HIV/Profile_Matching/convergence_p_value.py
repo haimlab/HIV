@@ -13,7 +13,7 @@ from constants import AminoAcid
 from csv import reader, writer
 from random import sample
 
-from helpers import envelopes_to_profile, envelopes_to_profile_no_log
+from helpers import envelopes_to_profile
 from profile_p_value import euc_dist
 from argparse import ArgumentParser
 from os.path import join
@@ -34,7 +34,7 @@ def get_shuffle_profiles(n, fn, pos, group_size, start, end):
 
 # read the nth hundred samples in given position, in historical order, from given envelope table
 # and calculate their centroid (which is basically the profile)
-def read_nth_group(f_name, pos, n, group_size):
+def read_nth_group(f_name, pos, n, group_size, log=True):
     with open(f_name) as f:
         r = reader(f)
         first_row = next(r)
@@ -42,18 +42,7 @@ def read_nth_group(f_name, pos, n, group_size):
             for _ in range(0, group_size):
                 next(r)
         envs = [next(r) for _ in range(group_size)]
-    return envelopes_to_profile(envs, first_row.index(str(pos)))
-
-
-def read_nth_group_no_log(f_name, pos, n, group_size):
-    with open(f_name) as f:
-        r = reader(f)
-        first_row = next(r)
-        for _ in range(0, n):
-            for _ in range(0, group_size):
-                next(r)
-        envs = [next(r) for _ in range(group_size)]
-    return envelopes_to_profile_no_log(envs, first_row.index(str(pos)))
+    return envelopes_to_profile(envs, first_row.index(str(pos)), log)
 
 
 # get centroid of 2007 to 2015
@@ -100,7 +89,7 @@ def main():
             # step 4, distacne between first 100 historical envs with 07-15 cnetroid
             try:
                 dist_first_100 = euc_dist(read_nth_group(file_name, pos, n, cmd_args.group_size), cent_last_p)
-                prof = read_nth_group_no_log(file_name, pos, n, cmd_args.group_size)
+                prof = read_nth_group(file_name, pos, n, cmd_args.group_size, log=False)
                 with open(cmd_args.out_file_name, 'a') as of:
                     start = str(n * cmd_args.group_size)
                     end = str(n*cmd_args.group_size + cmd_args.group_size)
