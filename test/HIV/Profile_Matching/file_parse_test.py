@@ -6,6 +6,7 @@ from os.path import join
 from math import log10
 from copy import deepcopy
 
+#TODO add a test for invalid filter property
 class TestFileParse(unittest.TestCase):
 
     def test_parse_file_name(self):
