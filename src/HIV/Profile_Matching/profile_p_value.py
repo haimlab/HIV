@@ -5,11 +5,12 @@ from constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
 from argparse import ArgumentParser
 from copy import deepcopy
 
+from helpers import euc_dist
+
 
 def calc_all_centroids(all_profiles, prop_type):
     centroids = {}
-    props = all_profiles.attr_list(prop_type)
-    for p in props:
+    for p in all_profiles.attr_list(prop_type):
         sub = all_profiles.filter(p)
         centroid = calc_centroid(sub)
         centroids[p] = centroid
@@ -19,10 +20,7 @@ def calc_all_centroids(all_profiles, prop_type):
 # calculate centroid by using only 1 centroid for k-means clustering
 # output type: {clade: {amino_acid: mean percentage}}
 def calc_centroid(all_profiles):
-    centroid, _ = kmeans(
-        asarray([[prof.distribution[aa] for aa in AMINOACIDS] for prof in all_profiles.profiles]),
-        1
-    )
+    centroid, _ = kmeans(asarray([[prof.distr[aa] for aa in AMINOACIDS] for prof in all_profiles.profiles]), 1)
 
     # format output
     centroid = centroid[0]
@@ -34,15 +32,6 @@ def calc_centroid(all_profiles):
     return centroid_dict
 
 
-# calculate euclidean distance
-def euc_dist(p1, p2):
-    if p1.keys() != p2.keys():
-        raise Exception('dimension mismatch')
-    p1 = [p1[key] for key in p1.keys()]
-    p2 = [p2[key] for key in p2.keys()]
-    return (sum([(a - b) ** 2 for a, b in zip(p1, p2)])) ** .5
-
-
 def clade_specificity_one_round(profs):
 
     # compute distance within
@@ -52,7 +41,7 @@ def clade_specificity_one_round(profs):
         sub_profiles = profs.filter(prop)
         c = centroids[prop]
         for p in sub_profiles.profiles:
-            distances.append(euc_dist(c, p.distribution))
+            distances.append(euc_dist(c, p.distr))
     dist_within = sum(distances) / len(distances)
 
     # compute distance without
@@ -114,7 +103,7 @@ def position_specificity_one_round(all_profiles, cur_prop_val):
 
     # calculate distance within
     sub_profiles = all_profiles.filter(cur_prop_val)
-    total = sum([euc_dist(cur_centroid, p.distribution) for p in sub_profiles.profiles])
+    total = sum([euc_dist(cur_centroid, p.distr) for p in sub_profiles.profiles])
     dist_within = total / len(sub_profiles.profiles)
 
     return dist_within / dist_without

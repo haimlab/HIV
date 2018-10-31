@@ -1,6 +1,5 @@
 from csv import reader
-from helpers import envelopes_to_profile
-from profile_p_value import euc_dist
+from helpers import envelopes_to_profile, euc_dist
 from constants import POS_2G12, AminoAcid
 from os.path import join, basename
 from random import sample

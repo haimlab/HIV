@@ -12,8 +12,7 @@ STEP 6: Repeat the above for all other non-overlapping sets of <group_size> enve
 from constants import AMINOACIDS
 from csv import reader, writer
 from random import sample
-from helpers import envelopes_to_profile
-from profile_p_value import euc_dist
+from helpers import envelopes_to_profile, euc_dist
 from argparse import ArgumentParser
 from os.path import join
 from sys import float_info

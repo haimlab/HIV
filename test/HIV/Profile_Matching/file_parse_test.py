@@ -96,9 +96,9 @@ class TestFileParse(unittest.TestCase):
             'ALL',
             100
         )
-        p.distribution['A'] =  20
-        p.distribution['C'] = 0
-        p.distribution['D'] = 100
+        p.distr['A'] =  20
+        p.distr['C'] = 0
+        p.distr['D'] = 100
         p = p.log_convert()
         self.assertAlmostEqual(2.301, p.distribution['A'], delta=0.01)
         self.assertEqual(0, p.distribution['C'])

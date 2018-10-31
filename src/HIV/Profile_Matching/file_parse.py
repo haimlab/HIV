@@ -114,12 +114,12 @@ class AllStaticProfiles(AllProfiles):
 class StaticProfile(Profile):
     def __init__(self, clade, region, position):
         super().__init__(clade, region, position)
-        self.distribution = {}  # amino acid -> percent
+        self.distr = {}  # amino acid -> percent
 
     def log_convert(self):
         converted = StaticProfile(self.clade, self.region, self.position)
-        for aa in self.distribution:
-            converted.distribution[aa] = logConvert(self.distribution[aa])
+        for aa in self.distr:
+            converted.distr[aa] = logConvert(self.distr[aa])
         return converted
 
 
@@ -242,7 +242,7 @@ def read_static(file_name):
     with open(file_name) as file:
         reader = csv.reader(file)
         for row in reader:
-            profile.distribution[row[AMINO_ACID]] = float(row[PERCENTAGE])
+            profile.distr[row[AMINO_ACID]] = float(row[PERCENTAGE])
     return profile
 
 
