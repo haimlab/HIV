@@ -49,10 +49,8 @@ class AllProfiles:
         filtered = AllProfiles()
         for p in self.profiles:
             val_set = {p.clade, p.region, p.position}
-            try:
+            if hasattr(p, 'amino_acid'):
                 val_set.add(p.amino_acid)
-            except AttributeError:
-                pass
             if all([arg in val_set for arg in args]):
                 filtered.profiles.append(p)
         return filtered
