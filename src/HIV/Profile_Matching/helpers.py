@@ -1,5 +1,5 @@
 from constants import AMINOACIDS
-from file_parse import logConvert
+from file_parse import log_convert
 
 
 # compute profile from all given envelopes
@@ -10,7 +10,7 @@ def envelopes_to_profile(envs, i, log=True):
         count[e[i]] += 1
     s = sum([count[aa] for aa in count])
     for aa in count:
-        count[aa] = logConvert(count[aa] / s) if log else count[aa] / s
+        count[aa] = log_convert(count[aa] / s) if log else count[aa] / s
     return count
 
 

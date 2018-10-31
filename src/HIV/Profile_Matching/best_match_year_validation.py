@@ -1,7 +1,7 @@
 from query import QueryInput, Query
 import sys
 import constants
-from file_parse import get_all_dynamic_profiles, calcYear
+from file_parse import get_all_dynamic_profiles, calc_year
 from weighted_fit import calcFit
 import csv
 
@@ -34,7 +34,7 @@ def write_validation_results(query, out_file_name, y2predict):
             if len(cur_prof.get_all_profiles()) != 1:
                 raise Exception('something is wrong')
             p = cur_prof.get_all_profiles()[0]
-            prof[aa] = p.get_distr(calcYear(query.input.year_range))
+            prof[aa] = p.get_distr(calc_year(query.input.year_range))
         writer.writerow([''] + [prof[aa] for aa in constants.AminoAcid])
         writer.writerow([''])
 

@@ -5,7 +5,6 @@ from constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
 from math import log10
-from functools import reduce
 
 AMINO_ACID = 0
 PERCENTAGE = 1
@@ -17,7 +16,7 @@ LOG_ZERO_DEFAULT = 0.1
 
 # TODO add option of parsing selected subset of input files only, given clade, region, position
 # TODO add distance member method to profile class
-def logConvert(val):
+def log_convert(val):
     val = log10(LOG_ZERO_DEFAULT) if val < LOG_ZERO_DEFAULT else log10(val)
     return val - log10(LOG_ZERO_DEFAULT)
 
@@ -95,7 +94,7 @@ class StaticProfile(Profile):
     def log_convert(self):
         converted = StaticProfile(self.clade, self.region, self.position)
         for aa in self.distr:
-            converted.distr[aa] = logConvert(self.distr[aa])
+            converted.distr[aa] = log_convert(self.distr[aa])
         return converted
 
 
@@ -113,12 +112,12 @@ class AllDynamicProfiles(AllProfiles):
 
 
 class DynamicProfile(Profile):
-    def __init__(self, amino_acid, clade, region, distr, numIso, years, position):
+    def __init__(self, amino_acid, clade, region, distr, n_isolates, years, position):
         super().__init__(clade, region, position)
         self.amino_acid = amino_acid  # a single amino acid
         self.years = years
         self.distr = distr  # percentages, in same order as years
-        self.numIso = numIso  # #isolates, in same order as years
+        self.numIso = n_isolates  # #isolates, in same order as years
         self.fit = None  # a fit object
         self.mostSimilar = None  # another profile with minimal euc dist
 
@@ -135,7 +134,7 @@ class DynamicProfile(Profile):
 
     def get_distr(self, year):
         if type(year) is str:
-            year = calcYear(year)
+            year = calc_year(year)
         for y, distr in zip(self.years, self.distr):
             if y == year:
                 return distr
@@ -143,33 +142,33 @@ class DynamicProfile(Profile):
 
 
 # get clade, country, position and return as according enums
-def parse_file_name(fileName):
-    fileName = basename(fileName)
+def parse_file_name(fn):
+    fn = basename(fn)
     # fileName = fileName[fileName.rfind('\\') + 1:]
-    [clade, region, position] = fileName.split('_')
+    [clade, region, position] = fn.split('_')
     position = int(position[:position.rfind('.')])  # remove file extension
     return clade, region, position
 
 
 # read a file for a clade-region combination into profile instances
-def read_dynamic(fileName):
+def read_dynamic(fn):
     all_profiles = []
-    clade, region, position = parse_file_name(fileName)
+    clade, region, position = parse_file_name(fn)
 
-    with open(fileName) as file:
+    with open(fn) as file:
         reader = csv.reader(file)
 
         # read in years
-        firstRow = next(reader)
+        first_row = next(reader)
         years = []
-        for i in range(1, len(firstRow)):
-            years.append(calcYear(firstRow[i]))
+        for i in range(1, len(first_row)):
+            years.append(calc_year(first_row[i]))
 
         # read in #isolates
-        secondRow = next(reader)
-        numIso = []
-        for i in range(1, len(secondRow)):
-            numIso.append(int(secondRow[i]))
+        second_row = next(reader)
+        n_isolates = []
+        for i in range(1, len(second_row)):
+            n_isolates.append(int(second_row[i]))
 
         # read in remaining rows
         for row in reader:
@@ -177,7 +176,7 @@ def read_dynamic(fileName):
             distr = []
             for i in range(1, len(row)):
                 distr.append(float(row[i]))
-            profile = DynamicProfile(aa, clade, region, distr, deepcopy(numIso), deepcopy(years), position)
+            profile = DynamicProfile(aa, clade, region, distr, deepcopy(n_isolates), deepcopy(years), position)
             all_profiles.append(profile)
 
     return all_profiles
@@ -224,12 +223,8 @@ def read_static(file_name):
 
 # calculate year as median of the range
 # assumes input string to look like "[year1, year2]" with year1 < year2
-def calcYear(yearRange):
-    commaInd = yearRange.find(',')
-    year1 = int(yearRange[1:commaInd])
-    year2 = int(yearRange[commaInd + 2:-1])
+def calc_year(year_range):
+    comma_ind = year_range.find(',')
+    year1 = int(year_range[1:comma_ind])
+    year2 = int(year_range[comma_ind + 2:-1])
     return (year1 + year2) / 2
-
-
-if __name__ == '__main__':
-    a = get_all_static_profiles()

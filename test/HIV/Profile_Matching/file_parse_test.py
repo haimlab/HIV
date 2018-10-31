@@ -34,8 +34,8 @@ class TestFileParse(unittest.TestCase):
         self.assertEqual(len(all_p.profiles), 125)
 
     def test_calc_year(self):
-        self.assertEqual(file_parse.calcYear('[2010, 2015]'), (2010 + 2015) / 2)
-        self.assertEqual(file_parse.calcYear('[2000, 2007]'), (2000 + 2007) / 2)
+        self.assertEqual(file_parse.calc_year('[2010, 2015]'), (2010 + 2015) / 2)
+        self.assertEqual(file_parse.calc_year('[2000, 2007]'), (2000 + 2007) / 2)
 
     def test_filter(self):
         all_p = file_parse.get_all_static_profiles()
@@ -106,9 +106,9 @@ class TestFileParse(unittest.TestCase):
 
     def test_log_convert_helper(self):
         for i in range(11, 30):
-            self.assertEqual(0, file_parse.logConvert(1 / i))
+            self.assertEqual(0, file_parse.log_convert(1 / i))
         for i in range(10, 100):
-            self.assertAlmostEqual(log10(i) + 1, file_parse.logConvert(i), delta=0.01)
+            self.assertAlmostEqual(log10(i) + 1, file_parse.log_convert(i), delta=0.01)
 
     def test_attr_list(self):
 
