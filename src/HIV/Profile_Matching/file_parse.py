@@ -29,27 +29,9 @@ class Profile:
             clade = Clade(clade)
         if not isinstance(region, Region):
             region = Region(region)
-        self.__clade = clade
-        self.__position = position
-        self.__region = region
-
-    def clade(self):
-        return self.__clade
-
-    def set_clade(self, new_clade):
-        self.__clade = new_clade
-
-    def position(self):
-        return self.__position
-
-    def set_position(self, position):
-        self.__position = position
-
-    def region(self):
-        return self.__region
-
-    def set_region(self, region):
-        self.__region = region
+        self.clade = clade
+        self.position = position
+        self.region = region
 
 
 class AllProfiles:
@@ -67,16 +49,16 @@ class AllProfiles:
             for arg in args:
                 if type(arg) not in [int, Clade, Region, AminoAcid]:
                     raise Exception('invalid filter')
-                if type(arg) == int and p.position() != arg:
+                if type(arg) == int and p.position != arg:
                     include = False
                     break
-                if type(arg) == Clade and p.clade() != arg:
+                if type(arg) == Clade and p.clade != arg:
                     include = False
                     break
-                if type(arg) == Region and p.region() != arg:
+                if type(arg) == Region and p.region != arg:
                     include = False
                     break
-                if type(arg) == AminoAcid and p.amino_acid() != arg:
+                if type(arg) == AminoAcid and p.amino_acid != arg:
                     include = False
                     break
             if include:
@@ -99,11 +81,11 @@ class AllProfiles:
         props = set()
         for pf in self.get_all_profiles():
             if prop_type == FilterProperties.CLADE:
-                prop = pf.clade()
+                prop = pf.clade
             elif prop_type == FilterProperties.POSITION:
-                prop = pf.position()
+                prop = pf.position
             elif prop_type == FilterProperties.REGION:
-                prop = pf.region()
+                prop = pf.region
             else:
                 raise Exception('not supported')
             props.add(prop)
@@ -117,17 +99,17 @@ class AllProfiles:
         for i in range(len(profs) - 1):
             j = random.randint(i, len(profs) - 1)
             if prop == FilterProperties.CLADE:
-                temp = profs[i].clade()
-                profs[i].set_clade(profs[j].clade())
-                profs[j].set_clade(temp)
+                temp = profs[i].clade
+                profs[i].clade = profs[j].clade
+                profs[j].clade = temp
             elif prop == FilterProperties.POSITION:
-                temp = profs[i].position()
-                profs[i].set_position(profs[j].position())
-                profs[j].set_position(temp)
+                temp = profs[i].position
+                profs[i].position = profs[j].position
+                profs[j].position = temp
             elif prop == FilterProperties.REGION:
-                temp = profs[i].region()
-                profs[i].set_region(profs[j].region)
-                profs[j].set_region(temp)
+                temp = profs[i].region
+                profs[i].region = profs[j].region
+                profs[j].region = temp
             else:
                 raise Exception('Unimplemented shuffle property')
 
@@ -167,7 +149,7 @@ class StaticProfile(Profile):
         return self.__distribution.keys()
 
     def log_convert(self):
-        converted = StaticProfile(self.clade(), self.region(), self.position())
+        converted = StaticProfile(self.clade, self.region, self.position)
         for aa in self.dim():
             converted.add_dist(aa, logConvert(self.get_distr(aa)))
         return converted
@@ -209,7 +191,7 @@ class DynamicProfile(Profile):
 
     # generate a string to identify this profile
     def tag(self):
-        components = [self.clade().value, self.region().value, self.amino_acid().value]
+        components = [self.clade.value, self.region.value, self.amino_acid().value]
         return "_".join(components)
 
     def amino_acid(self):
