@@ -100,9 +100,9 @@ class TestFileParse(unittest.TestCase):
         p.distr['C'] = 0
         p.distr['D'] = 100
         p = p.log_convert()
-        self.assertAlmostEqual(2.301, p.distribution['A'], delta=0.01)
-        self.assertEqual(0, p.distribution['C'])
-        self.assertAlmostEqual(3, p.distribution['D'], delta=0.01)
+        self.assertAlmostEqual(2.301, p.distr['A'], delta=0.01)
+        self.assertEqual(0, p.distr['C'])
+        self.assertAlmostEqual(3, p.distr['D'], delta=0.01)
 
     def test_log_convert_helper(self):
         for i in range(11, 30):
