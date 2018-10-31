@@ -5,6 +5,7 @@ from constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
 from math import log10
+from functools import reduce
 
 AMINO_ACID = 0
 PERCENTAGE = 1
@@ -39,13 +40,21 @@ class AllProfiles:
     # filter the profiles according to given criteria
     # returns a result also as AllProfiles instance, so chained filtering can be applied
     def filter(self, *args):
+        # verify if filter arguments are valid
+        invalid_args = list(filter(lambda x: x not in CLADES + REGIONS + POS_ALL + AMINOACIDS, args))
+        if len(invalid_args) > 0:
+            invalid_args = list(map(str, invalid_args))
+            raise Exception('invalid filters:\n' + '\n'.join(invalid_args))
+
         filtered = AllProfiles()
         for p in self.profiles:
-            for arg in args:
-                if (arg not in CLADES) and (arg not in REGIONS) and (arg not in AMINOACIDS) and (arg not in POS_ALL):
-                    raise Exception(f'invalid filter: {arg}, with type: {type(arg)}')
-                if arg in (p.clade, p.region, p.position, p.amino_acid):
-                    filtered.profiles.append(p)
+            val_set = {p.clade, p.region, p.position}
+            try:
+                val_set.add(p.amino_acid)
+            except AttributeError:
+                pass
+            if all([arg in val_set for arg in args]):
+                filtered.profiles.append(p)
         return filtered
 
     def get_only_profile(self):
@@ -233,7 +242,7 @@ def read_static(file_name):
     with open(file_name) as file:
         reader = csv.reader(file)
         for row in reader:
-            profile.distribution[row[AMINO_ACID]] = row[PERCENTAGE]
+            profile.distribution[row[AMINO_ACID]] = float(row[PERCENTAGE])
     return profile
 
 

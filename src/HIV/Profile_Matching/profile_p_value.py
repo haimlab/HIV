@@ -1,7 +1,7 @@
 from file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
-import constants
+from constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
 from argparse import ArgumentParser
 from copy import deepcopy
 
@@ -16,30 +16,19 @@ def calc_all_centroids(all_profiles, prop_type):
     return centroids  # {prop_type - {amino acid -> percentage}
 
 
-# calculate centroid using mean of each dimension
-# delegates to kmeans to scipy
+# calculate centroid by using only 1 centroid for k-means clustering
 # output type: {clade: {amino_acid: mean percentage}}
 def calc_centroid(all_profiles):
-
-    # format input for scipy
-    vectors = []
-    dims = None
-    for prof in all_profiles.get_all_profiles():
-        cur_dim = prof.dim()
-        if dims is None:
-            dims = cur_dim
-        if cur_dim != dims:  # different amino acid in profiles
-            raise Exception('profiles contain different amino acids')
-        vectors.append([prof.get_distr(aa) for aa in dims])
-
-    # compute centroid using scipy
-    centroid, _ = kmeans(asarray(vectors), 1)
+    centroid, _ = kmeans(
+        asarray([[prof.distribution[aa] for aa in AMINOACIDS] for prof in all_profiles.profiles]),
+        1
+    )
 
     # format output
     centroid = centroid[0]
     centroid_dict = {}
     index = 0
-    for aa in dims:
+    for aa in AMINOACIDS:
         centroid_dict[aa] = centroid[index]
         index += 1
     return centroid_dict
@@ -104,7 +93,7 @@ def select_sub_group(raw, clade_region_pairs, positions):
         filters += [(p, c, r) for c, r in pairs]
     all_prof = AllStaticProfiles()
     for f in filters:
-        sub = raw.filter(*f).get_all_profiles()
+        sub = raw.filter(*f).profiles
         for s in sub:
             if s.clade == 'C' and s.position == 295:
                 continue
@@ -125,8 +114,8 @@ def position_specificity_one_round(all_profiles, cur_prop_val):
 
     # calculate distance within
     sub_profiles = all_profiles.filter(cur_prop_val)
-    total = sum([euc_dist(cur_centroid, p.get_entire_distr()) for p in sub_profiles.get_all_profiles()])
-    dist_within = total / len(sub_profiles.get_all_profiles())
+    total = sum([euc_dist(cur_centroid, p.distribution) for p in sub_profiles.profiles])
+    dist_within = total / len(sub_profiles.profiles)
 
     return dist_within / dist_without
 
@@ -164,11 +153,11 @@ def main():
     cmd_args = parser.parse_args()
 
     if cmd_args.epitope == '2g12':
-        positions = constants.POS_2G12
+        positions = POS_2G12
     elif cmd_args.epitope == '2f5':
-        positions = constants.POS_2F5
+        positions = POS_2F5
     elif cmd_args.epitope == 'pngs':
-        positions = constants.PNGS
+        positions = POS_PNGS
     else:
         raise Exception('invalid epitope type')
 
@@ -179,6 +168,7 @@ def main():
         clade_specificity(cmd_args.num_shuffle, all_prof, positions)
     elif cmd_args.type == 'position':
         position_specificity(cmd_args.num_shuffle, all_prof)
+        print(positions)
     else:
         raise Exception('invalid')
 
