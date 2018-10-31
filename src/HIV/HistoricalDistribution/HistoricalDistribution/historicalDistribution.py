@@ -28,12 +28,16 @@ import openpyxl
 Input = r"/Users/Han/Documents/Haim Lab(2018 summer)/Historical Distribution/6.25.18 Clade B Historical Distribution Data.xlsx"
 Output = r"/Users/Han/Documents/Haim Lab(2018 summer)/locationTest/"
 OutputName = "distribution.xlsx"
-PositionRange= [[88,88],[197,339]]
-YearRange = [[1981,1983],[1979,2001],[2004,2013],[1981,1981]]
+POS_RANGE= (88, 88), (197, 339)
+YEAR_RANGE = (1981, 1983), (1979, 2001), (2004, 2013), (1981, 1981)
 workbook = xlrd.open_workbook(Input)
 sheet = workbook.sheet_by_index(0)
 nRows = sheet.nrows
 nCols = sheet.ncols
+
+
+def main(ifn, ofn):
+    pass
 
 
 #get data of row y by index, eg:GetRowIndexData(2)
@@ -66,7 +70,7 @@ def get_data_at(y, x):
 #get position List
 def get_position_list():
     result = []
-    for i in PositionRange:
+    for i in POS_RANGE:
         for j in get_row_index_data(1):
             if (type(j)== int) or (type(j)== float):
                 if (j>= i[0]) and (j <= i[1]) :
@@ -100,7 +104,7 @@ def get_year_range_data(y, p):
    
      
 
-test2 = get_year_range_data(YearRange, Position)
+test2 = get_year_range_data(YEAR_RANGE, Position)
 
 
 #write into excel file
@@ -192,8 +196,8 @@ def write_file_2():
     col_c = 3
     for p in range(len(Position)):
         
-        for i in range(len(YearRange)):
-            sheet.cell(row=1, column=col_c).value=str(YearRange[i])
+        for i in range(len(YEAR_RANGE)):
+            sheet.cell(row=1, column=col_c).value=str(YEAR_RANGE[i])
             col_c = col_c+1
         col_c = col_c + 2
     col_c_c = 1
