@@ -2,7 +2,8 @@ import argparse
 import sys
 import csv
 import constants
-from file_parse import get_all_dynamic_profiles, calc_year
+from file_parse import get_all_dynamic_profiles
+from helpers import calc_year
 from weighted_fit import calcFit
 from os.path import join
 from math import log10

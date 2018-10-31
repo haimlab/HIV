@@ -25,3 +25,12 @@ def euc_dist(p1, p2):
 def log_convert(val):
     val = log10(LOG_ZERO_DEFAULT) if val < LOG_ZERO_DEFAULT else log10(val)
     return val - log10(LOG_ZERO_DEFAULT)
+
+
+# calculate year as median of the range
+# assumes input string to look like "[year1, year2]" with year1 < year2
+def calc_year(year_range):
+    comma_ind = year_range.find(',')
+    year1 = int(year_range[1:comma_ind])
+    year2 = int(year_range[comma_ind + 2:-1])
+    return (year1 + year2) / 2

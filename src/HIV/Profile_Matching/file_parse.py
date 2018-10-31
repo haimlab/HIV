@@ -5,7 +5,7 @@ from constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
 
-from helpers import log_convert
+from helpers import log_convert, calc_year
 
 AMINO_ACID = 0
 PERCENTAGE = 1
@@ -213,12 +213,3 @@ def read_static(file_name):
         for row in reader:
             profile.distr[row[AMINO_ACID]] = float(row[PERCENTAGE])
     return profile
-
-
-# calculate year as median of the range
-# assumes input string to look like "[year1, year2]" with year1 < year2
-def calc_year(year_range):
-    comma_ind = year_range.find(',')
-    year1 = int(year_range[1:comma_ind])
-    year2 = int(year_range[comma_ind + 2:-1])
-    return (year1 + year2) / 2

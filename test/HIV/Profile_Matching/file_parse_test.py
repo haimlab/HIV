@@ -37,8 +37,8 @@ class TestFileParse(unittest.TestCase):
         self.assertEqual(len(all_p.profiles), 125)
 
     def test_calc_year(self):
-        self.assertEqual(file_parse.calc_year('[2010, 2015]'), (2010 + 2015) / 2)
-        self.assertEqual(file_parse.calc_year('[2000, 2007]'), (2000 + 2007) / 2)
+        self.assertEqual(helpers.calc_year('[2010, 2015]'), (2010 + 2015) / 2)
+        self.assertEqual(helpers.calc_year('[2000, 2007]'), (2000 + 2007) / 2)
 
     def test_filter(self):
         all_p = file_parse.get_all_static_profiles()
