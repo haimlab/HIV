@@ -51,8 +51,8 @@ def clade_specificity_one_round(profs):
     for prop in centroids:
         sub_profiles = profs.filter(prop)
         c = centroids[prop]
-        for p in sub_profiles.get_all_profiles():
-            distances.append(euc_dist(c, p.get_entire_distr()))
+        for p in sub_profiles.profiles:
+            distances.append(euc_dist(c, p.distribution))
     dist_within = sum(distances) / len(distances)
 
     # compute distance without
@@ -68,14 +68,14 @@ def clade_specificity_one_round(profs):
 
 def clade_specificity(num_shuffle, all_profiles, positions):
     for pos in positions:
-        sub = all_profiles.filter(pos)
+        sub = deepcopy(all_profiles.filter(pos))
         std_rat = clade_specificity_one_round(sub)
         num_above = 0
         num_below = 0
         num_equal = 0
         for i in range(0, num_shuffle):
-            shuffled_prof = sub.shuffle('clade')
-            r = clade_specificity_one_round(shuffled_prof)
+            sub.shuffle('clade')
+            r = clade_specificity_one_round(sub)
             if r > std_rat:
                 num_above += 1
             elif r < std_rat:
@@ -87,10 +87,10 @@ def clade_specificity(num_shuffle, all_profiles, positions):
 
 
 def select_sub_group(raw, clade_region_pairs, positions):
-    pairs = ((c, r) for [c, r] in (p.split(',') for p in clade_region_pairs))
+    pairs = [i for i in (p.split(',') for p in clade_region_pairs)]
     filters = []
     for p in positions:
-        filters += [(p, c, r) for c, r in pairs]
+        filters += [(p, c, r) for [c, r] in pairs]
     all_prof = AllStaticProfiles()
     for f in filters:
         sub = raw.filter(*f).profiles

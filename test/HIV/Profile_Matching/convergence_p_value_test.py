@@ -1,6 +1,5 @@
 import unittest
-import constants
-import convergence_p_value
+from constants import AMINOACIDS
 import helpers
 
 
@@ -12,10 +11,10 @@ class TestProfilePValue(unittest.TestCase):
             ['N'] * 50 + \
             ['T'] * 1
         prof = helpers.envelopes_to_profile(sequences, 0)
-        for aa in constants.AminoAcid:
-            if aa == constants.AminoAcid.Z:
+        for aa in AMINOACIDS:
+            if aa == 'Z':
                 self.assertAlmostEqual(0.21467016498, prof[aa])
-            elif aa == constants.AminoAcid.N:
+            elif aa == 'N':
                 self.assertAlmostEqual(0.91364016932, prof[aa])
             else:
                 self.assertEqual(0, prof[aa])

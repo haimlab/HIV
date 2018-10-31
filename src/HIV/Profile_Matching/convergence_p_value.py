@@ -9,7 +9,7 @@ STEP 5: Calculate ratio as (#random p6 profiles (centroids) from STEP 1 for whos
 STEP 6: Repeat the above for all other non-overlapping sets of <group_size> envelopes.
 """
 
-from constants import AminoAcid
+from constants import AMINOACIDS
 from csv import reader, writer
 from random import sample
 from helpers import envelopes_to_profile
@@ -78,7 +78,7 @@ def main():
         with open(cmd_args.out_file_name, 'a') as of:
             w = writer(of, lineterminator='\n')
             w.writerow(['position: ' + str(pos)])
-            w.writerow([''] + [aa.value for aa in AminoAcid])
+            w.writerow([''] + [aa.value for aa in AMINOACIDS])
 
         print(f'position: {pos}')
         for n in range(0, int(float_info.max)):
@@ -96,7 +96,7 @@ def main():
                     start = str(n * cmd_args.group_size)
                     end = str(n*cmd_args.group_size + cmd_args.group_size)
                     w = writer(of, lineterminator='\n')
-                    w.writerow([start + ' to ' + end] + [prof[aa] for aa in AminoAcid])
+                    w.writerow([start + ' to ' + end] + [prof[aa] for aa in AMINOACIDS])
             except StopIteration:
                 break
             # step 5, calculate the ratio as #distance which a random profile from step 1 to 07-15
