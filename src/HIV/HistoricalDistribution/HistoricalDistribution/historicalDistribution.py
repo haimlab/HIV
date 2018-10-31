@@ -4,40 +4,43 @@
 Created on Mon Jun 25 13:42:51 2018
 
 @author: Changze Han
+
+This program calculate the historical distribution of different positions' amino acids
+STEPS:
+1. Change the Input directory, do not delete r
+2. Change the Output directory, do not delete r, When you copy the address, keep in mind there's also a slash at the end.
+3. Make a name of the Output file
+4. Change the PositionRange: if you want to select a single position: [[88,88]]
+                            if you want to select multiple positions: [[88,88],[156,156],[276,276]]
+                            if you want to select a position range, like from 88 to 637: [[88,637]]
+                            you can also mix them: [[88,88],[156,156],[197,295],[392,637]]
+5. Change the YearRange, the format is the same as the PositionRange:
+                                single year:[1979,1979]
+                                year range: [[1979,2014]]
+                                mix:[[1979,2014],[1985,2006],[1994,2000],[2008,2008]]
+6. Ignore the output file named 'ignore.xlsx', feel free to delete it
+7. run Forest run!
 """
 
 
 import xlrd
 import openpyxl
 
-# This program calculate the historical distribution of different positions' amino acids
-# STEPS:
-# 1. Change the Input directory, do not delete r
-# 2. Change the Output directory, do not delete r, When you copy the address, keep in mind there's also a slash at the end.
-# 3. Make a name of the Output file
-# 4. Change the PositionRange: if you want to select a single position: [[88,88]]
-#                             if you want to select multiple positions: [[88,88],[156,156],[276,276]]
-#                             if you want to select a position range, like from 88 to 637: [[88,637]]
-#                             you can also mix them: [[88,88],[156,156],[197,295],[392,637]]
-# 5. Change the YearRange, the format is the same as the PositionRange:
-#                                 single year:[1979,1979]
-#                                 year range: [[1979,2014]]
-#                                 mix:[[1979,2014],[1985,2006],[1994,2000],[2008,2008]]
-# 6. Ignore the output file named 'ignore.xlsx', feel free to delete it
-# 7. run Forest run!
-Input = r"/Users/Han/Documents/Haim Lab(2018 summer)/Historical Distribution/6.25.18 Clade B Historical Distribution Data.xlsx"
-Output = r"/Users/Han/Documents/Haim Lab(2018 summer)/locationTest/"
-OutputName = "distribution.xlsx"
-POS_RANGE= (88, 88), (197, 339)
+
+POS_RANGE = (88, 88), (197, 339)
 YEAR_RANGE = (1981, 1983), (1979, 2001), (2004, 2013), (1981, 1981)
-workbook = xlrd.open_workbook(Input)
-sheet = workbook.sheet_by_index(0)
-nRows = sheet.nrows
-nCols = sheet.ncols
 
 
 def main(ifn, ofn):
-    pass
+    workbook = xlrd.open_workbook(ifn)
+    sheet = workbook.sheet_by_index(0)
+    nRows = sheet.nrows
+    nCols = sheet.ncols
+
+    Position = get_position_list()
+    test2 = get_year_range_data(YEAR_RANGE, Position)
+    write_file()
+    write_file_2()
 
 
 #get data of row y by index, eg:GetRowIndexData(2)
@@ -78,7 +81,7 @@ def get_position_list():
     return result
             
     
-Position = get_position_list()
+
 
 #get data of position p during year range y
 def get_year_range_data(y, p):
@@ -104,7 +107,7 @@ def get_year_range_data(y, p):
    
      
 
-test2 = get_year_range_data(YEAR_RANGE, Position)
+
 
 
 #write into excel file
@@ -134,7 +137,7 @@ def write_file():
                 c_count = c_count + 1
     wb.save(Output+"ignore.xlsx")
     
-write_file()
+
 
 
 #open the ignore.xlsx, then count the amino acid
@@ -214,7 +217,7 @@ def write_file_2():
         sheet.cell(row=24, column=i+1).value=test4[i]
     wb.save(Output + OutputName)
     
-write_file_2()
+
 
 
 
