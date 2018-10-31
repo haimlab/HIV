@@ -2,7 +2,6 @@ from file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
 import constants
-from constants import FilterProperties
 from argparse import ArgumentParser
 from copy import deepcopy
 
@@ -58,7 +57,7 @@ def euc_dist(p1, p2):
 def clade_specificity_one_round(profs):
 
     # compute distance within
-    centroids = calc_all_centroids(profs, FilterProperties.CLADE)
+    centroids = calc_all_centroids(profs, 'clade')
     distances = []
     for prop in centroids:
         sub_profiles = profs.filter(prop)
@@ -86,7 +85,7 @@ def clade_specificity(num_shuffle, all_profiles, positions):
         num_below = 0
         num_equal = 0
         for i in range(0, num_shuffle):
-            shuffled_prof = sub.shuffle(FilterProperties.CLADE)
+            shuffled_prof = sub.shuffle('clade')
             r = clade_specificity_one_round(shuffled_prof)
             if r > std_rat:
                 num_above += 1
@@ -99,10 +98,7 @@ def clade_specificity(num_shuffle, all_profiles, positions):
 
 
 def select_sub_group(raw, clade_region_pairs, positions):
-    pairs = []
-    for p in clade_region_pairs:
-        [c, r] = p.split(',')
-        pairs.append((constants.Clade(c), constants.Region(r)))
+    pairs = ((c, r) for [c, r] in (p.split(',') for p in clade_region_pairs))
     filters = []
     for p in positions:
         filters += [(p, c, r) for c, r in pairs]
@@ -110,11 +106,11 @@ def select_sub_group(raw, clade_region_pairs, positions):
     for f in filters:
         sub = raw.filter(*f).get_all_profiles()
         for s in sub:
-            if s.clade == constants.Clade.C and s.position == 295:
+            if s.clade == 'C' and s.position == 295:
                 continue
-            if s.clade == constants.Clade.AE and (s.position == 332 or s.position == 339):
+            if s.clade == 'AE' and (s.position == 332 or s.position == 339):
                 continue
-            all_prof.add_profile(s)
+            all_prof.profiles.append(s)
     return all_prof
 
 
@@ -122,7 +118,7 @@ def select_sub_group(raw, clade_region_pairs, positions):
 def position_specificity_one_round(all_profiles, cur_prop_val):
 
     # calculate distance without (distance relative to other sub groups)
-    all_centroids = calc_all_centroids(all_profiles, FilterProperties.POSITION)
+    all_centroids = calc_all_centroids(all_profiles, 'position')
     cur_centroid = all_centroids[cur_prop_val]
     del all_centroids[cur_prop_val]
     dist_without = sum([euc_dist(cur_centroid, all_centroids[c]) for c in all_centroids]) / len(all_centroids)
@@ -137,7 +133,7 @@ def position_specificity_one_round(all_profiles, cur_prop_val):
 
 def position_specificity(num_shuffle, all_profiles):
 
-    positions = all_profiles.attr_list(FilterProperties.POSITION)
+    positions = all_profiles.attr_list('position')
     shuffle_copy = deepcopy(all_profiles)
 
     for p in positions:
@@ -145,7 +141,7 @@ def position_specificity(num_shuffle, all_profiles):
         num_above = 0
         num_below = 0
         for i in range(0, num_shuffle):
-            shuffle_copy.shuffle(FilterProperties.POSITION)
+            shuffle_copy.shuffle('position')
             shuffled_rat = position_specificity_one_round(shuffle_copy, p)
             if shuffled_rat > std_rat:
                 num_above += 1
