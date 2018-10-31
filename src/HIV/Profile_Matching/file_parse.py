@@ -71,20 +71,9 @@ class AllProfiles:
         profs = self.profiles
         for i in range(len(profs) - 1):
             j = random.randint(i, len(profs) - 1)
-            if prop_type == 'clade':
-                temp = profs[i].clade
-                profs[i].clade = profs[j].clade
-                profs[j].clade = temp
-            elif prop_type == 'position':
-                temp = profs[i].position
-                profs[i].position = profs[j].position
-                profs[j].position = temp
-            elif prop_type == 'region':
-                temp = profs[i].region
-                profs[i].region = profs[j].region
-                profs[j].region = temp
-            else:
-                raise Exception('Unimplemented shuffle property')
+            temp = getattr(profs[i], prop_type)
+            setattr(profs[i], prop_type, getattr(profs[j], prop_type))
+            setattr(profs[j], prop_type, temp)
 
 
 class AllStaticProfiles(AllProfiles):
