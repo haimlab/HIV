@@ -62,18 +62,7 @@ class AllProfiles:
             return self.profiles[0]
 
     def attr_list(self, prop_type):
-        props = set()
-        for p in self.profiles:
-            if prop_type == 'clade':
-                prop = p.clade
-            elif prop_type == 'position':
-                prop = p.position
-            elif prop_type == 'region':
-                prop = p.region
-            else:
-                raise Exception('not supported')
-            props.add(prop)
-        return list(props)
+        return list({getattr(p, prop_type) for p in self.profiles})
 
     def shuffle(self, prop_type):
         # so that we don't shuffle things back to previous orders when
