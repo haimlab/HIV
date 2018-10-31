@@ -14,8 +14,6 @@ CONTEMP_PREDICTION_DATA_FOLDER_NAME = join('data', 'contemporary_prediction')
 LOG_ZERO_DEFAULT = 0.1
 
 
-# TODO add option of parsing selected subset of input files only, given clade, region, position
-# TODO add distance member method to profile class
 def log_convert(val):
     val = log10(LOG_ZERO_DEFAULT) if val < LOG_ZERO_DEFAULT else log10(val)
     return val - log10(LOG_ZERO_DEFAULT)
