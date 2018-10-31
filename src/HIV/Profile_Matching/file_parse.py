@@ -4,7 +4,8 @@ from copy import deepcopy
 from constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
-from math import log10
+
+from helpers import log_convert
 
 AMINO_ACID = 0
 PERCENTAGE = 1
@@ -12,11 +13,6 @@ DYNAMIC_DATA_FOLDER_NAME = join('data', 'dynamic')
 STATIC_DATA_FOLDER_NAME = join('data', 'static')
 CONTEMP_PREDICTION_DATA_FOLDER_NAME = join('data', 'contemporary_prediction')
 LOG_ZERO_DEFAULT = 0.1
-
-
-def log_convert(val):
-    val = log10(LOG_ZERO_DEFAULT) if val < LOG_ZERO_DEFAULT else log10(val)
-    return val - log10(LOG_ZERO_DEFAULT)
 
 
 class Profile:

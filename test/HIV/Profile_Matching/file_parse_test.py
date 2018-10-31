@@ -7,6 +7,9 @@ from math import log10
 from copy import deepcopy
 
 #TODO add a test for invalid filter property
+import helpers
+
+
 class TestFileParse(unittest.TestCase):
 
     def test_parse_file_name(self):
@@ -106,9 +109,9 @@ class TestFileParse(unittest.TestCase):
 
     def test_log_convert_helper(self):
         for i in range(11, 30):
-            self.assertEqual(0, file_parse.log_convert(1 / i))
+            self.assertEqual(0, helpers.log_convert(1 / i))
         for i in range(10, 100):
-            self.assertAlmostEqual(log10(i) + 1, file_parse.log_convert(i), delta=0.01)
+            self.assertAlmostEqual(log10(i) + 1, helpers.log_convert(i), delta=0.01)
 
     def test_attr_list(self):
 
