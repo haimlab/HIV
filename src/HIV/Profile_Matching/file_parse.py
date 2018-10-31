@@ -1,7 +1,7 @@
 import csv
 import random
 from copy import deepcopy
-from constants import CLADES, REGIONS, AMINOACIDS
+from constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
 from math import log10
@@ -42,8 +42,8 @@ class AllProfiles:
         filtered = AllProfiles()
         for p in self.profiles:
             for arg in args:
-                if (arg not in CLADES) or (arg not in REGIONS) or (arg not in AMINOACIDS):
-                    raise Exception('invalid filter')
+                if (arg not in CLADES) and (arg not in REGIONS) and (arg not in AMINOACIDS) and (arg not in POS_ALL):
+                    raise Exception(f'invalid filter: {arg}, with type: {type(arg)}')
                 if arg in (p.clade, p.region, p.position, p.amino_acid):
                     filtered.profiles.append(p)
         return filtered
