@@ -32,12 +32,18 @@ def main():
         aa_counts = {}
         for i in range(0, len(first_row)):
             pos = int(first_row[i])
-            if any(list(map(lambda y: y[0] <= pos <= y[1], pos_ranges))):
+            if any(list(map(lambda x: x[0] <= pos <= x[1], pos_ranges))):  # TODO refactor with __contains__
                 ind2pos[i] = pos
                 aa_counts[pos] = {aa: {r: 0 for r in year_ranges} for aa in AMINOACIDS}
 
         for row in r:
+            year = int(row[YEAR_IND])
+            for year_range in year_ranges:
+                if year_range[0] <= year <= year_range[1]:
+                    for i in ind2pos:
+                        aa_counts[ind2pos[i]][row[i]][year_range] += 1
 
+    # TODO convert counts to percentages, and then write to file
 
 if __name__ == '__main__':
     main()
