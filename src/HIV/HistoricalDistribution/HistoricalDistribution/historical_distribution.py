@@ -1,9 +1,14 @@
 from argparse import ArgumentParser
+from csv import reader, writer
+
 
 AMINOACIDS = ('Z', 'N', 'T', 'S', 'D', 'E',
               'K', 'R', 'H', 'Y', 'Q', 'I',
               'L', 'V', 'A', 'C', 'F', 'G',
               'M', 'P', 'W')
+POS_START_IND = 4  # amino acid data starts at column 4
+YEAR_IND = 1  # index of column holding year
+
 
 def main():
 
@@ -18,15 +23,23 @@ def main():
     def parse_range(r):
         return [(int(i.split(',')[0]), int(i.split(',')[1])) for i in r.split(' ')]
     year_ranges = parse_range(cmd_args.year_ranges)
-    positions = parse_range(cmd_args.position_ranges)
+    pos_ranges = parse_range(cmd_args.position_ranges)
+
+    with open(cmd_args.in_file_name, 'r') as f:
+        r = reader(f)
+        first_row = next(r)[POS_START_IND:]
+        ind2pos = {}
+        aa_counts = {}
+        for i in range(0, len(first_row)):
+            pos = int(first_row[i])
+            if any(list(map(lambda y: y[0] <= pos <= y[1], pos_ranges))):
+                ind2pos[i] = pos
+                aa_counts[pos] = {aa: {r: 0 for r in year_ranges} for aa in AMINOACIDS}
+
+        for row in r:
 
 
 if __name__ == '__main__':
     main()
 
-    # aa_counts = {p: {r: {aa: 0 for aa in AMINOACIDS} for r in year_ranges} for p in positions}
-    #
-    # with open(ifn, 'r') as f:
-    #     fr = next(f)
-    #     positions = filter(lambda x: any(list(map(lambda y: y[0] <= int(x) <= y[1], year_ranges))), fr)
-    #     print(positions)
+
