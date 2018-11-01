@@ -10,6 +10,8 @@ Created on Mon Jun 25 13:42:51 2018
 import xlrd
 import openpyxl
 
+# Input format: Country, Year, Patient, Accession, 1, 2, ..., where columns with numeric headers hold amino acids of
+# the corresponding position
 # This program calculate the historical distribution of different positions' amino acids
 # STEPS:
 # 1. Change the Input directory, do not delete r
@@ -25,8 +27,8 @@ import openpyxl
 #                                 mix:[[1979,2014],[1985,2006],[1994,2000],[2008,2008]]
 # 6. Ignore the output file named 'ignore.xlsx', feel free to delete it
 # 7. run Forest run!
-Input = r"/Users/Han/Documents/Haim Lab(2018 summer)/Historical Distribution/6.25.18 Clade B Historical Distribution Data.xlsx"
-Output = r"/Users/Han/Documents/Haim Lab(2018 summer)/locationTest/"
+Input = r"C:\Users\rdong6\Desktop\Historical_Distribution_Test\8.16.18 Clade_B_ALL Population_PNGS PANEL SEQUENCES.xlsx"
+Output = r"C:\Users\rdong6\Desktop\Historical_Distribution_Test\\"
 OutputName = "distribution.xlsx"
 POS_RANGE= (88, 88), (197, 339)
 YEAR_RANGE = (1981, 1983), (1979, 2001), (2004, 2013), (1981, 1981)
@@ -36,16 +38,13 @@ nRows = sheet.nrows
 nCols = sheet.ncols
 
 
-def main(ifn, ofn):
-    pass
-
-
 #get data of row y by index, eg:GetRowIndexData(2)
 def get_row_index_data(y):
     row = []
     for col in range (nCols):
         row.append(sheet.cell_value((y-1),col))
     return row
+
 
 #get data of column x by index
 def get_col_index_data(x):
@@ -54,14 +53,16 @@ def get_col_index_data(x):
         col.append(sheet.cell_value(row,(x-1)))
     return col
 
+
 #get data of column x by title of first row , eg: GetColData('Year')
 def get_col_data(x):
-    
     for i in get_row_index_data(1):
         if i == x : 
             a = get_col_index_data(get_row_index_data(1).index(i) + 1)
             del a[0]
             return a
+
+
 #get data at a specific location, eg:GetDataAt(1,2)
 def get_data_at(y, x):
     return sheet.cell_value((y-1),(x-1))
@@ -76,8 +77,8 @@ def get_position_list():
                 if (j>= i[0]) and (j <= i[1]) :
                     result.append(int(j))
     return result
-            
-    
+
+
 Position = get_position_list()
 
 #get data of position p during year range y
@@ -210,12 +211,17 @@ def write_file_2():
             for j in range(len(test3[i])):
                 sheet.cell(row=j+2, column=col_c_c).value=test3[i][j]
             col_c_c = col_c_c+1
-    for i in range(len(test4)):
-        sheet.cell(row=24, column=i+1).value=test4[i]
+    flat_list = [item for sublist in test4[1:] for item in sublist]
+    for i in range(len(flat_list)):
+        print(flat_list[i])
+        sheet.cell(row=24, column=i+1).value=flat_list[i]
     wb.save(Output + OutputName)
     
 write_file_2()
 
+
+def main():
+    pass
 
 
 
