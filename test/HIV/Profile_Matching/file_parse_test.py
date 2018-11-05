@@ -1,13 +1,11 @@
 import unittest
 
-import file_parse
+from src.HIV.Profile_Matching import file_parse
 from src.HIV import constants
 from os.path import join
 from math import log10
 from copy import deepcopy
-
-#TODO add a test for invalid filter property
-import helpers
+from src.HIV.Profile_Matching import helpers
 
 
 class TestFileParse(unittest.TestCase):
@@ -114,13 +112,6 @@ class TestFileParse(unittest.TestCase):
             self.assertAlmostEqual(log10(i) + 1, helpers.log_convert(i), delta=0.01)
 
     def test_attr_list(self):
-
-        # dynamic profile lists
-        p = file_parse.get_all_dynamic_profiles()
-        attrs = set(p.attr_list('clade'))
-        self.assertEqual(set(constants.CLADES), attrs)
-
-        # static profile lists
         p = file_parse.get_all_static_profiles()
         p = p.filter('EU', 'B')
         self.assertEqual(['EU'], p.attr_list('region'))

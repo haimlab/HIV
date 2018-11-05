@@ -1,6 +1,5 @@
 import unittest
-import file_parse
-import profile_p_value
+from src.HIV.Profile_Matching import file_parse, specificity
 
 
 class TestProfilePValue(unittest.TestCase):
@@ -8,7 +7,7 @@ class TestProfilePValue(unittest.TestCase):
     def test_select_sub_group(self):
 
         all_prof = file_parse.get_all_static_profiles()
-        sub_prof = profile_p_value.select_sub_group(all_prof, ['B,NA', 'C,EU', 'AE,TH'], [295, 667])
+        sub_prof = specificity.select_sub_group(all_prof, ['B,NA', 'C,EU', 'AE,TH'], [295, 667])
         for p in sub_prof.profiles:
             self.assertTrue(p.position == 295 or p.position == 667)
         for p in sub_prof.profiles:
@@ -21,7 +20,7 @@ class TestProfilePValue(unittest.TestCase):
     def test_select_sub_group_exclusions(self):
 
         all_prof = file_parse.get_all_static_profiles()
-        sub_prof = profile_p_value.select_sub_group(all_prof, ['C,EU', 'AE,TH'], [295, 332, 392])
+        sub_prof = specificity.select_sub_group(all_prof, ['C,EU', 'AE,TH'], [295, 332, 392])
         num_c = 0
         num_ae = 0
         for p in sub_prof.profiles:

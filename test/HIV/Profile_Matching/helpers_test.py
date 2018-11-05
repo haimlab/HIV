@@ -1,6 +1,6 @@
 import unittest
 from src.HIV.constants import AMINOACIDS
-import helpers
+from src.HIV.Profile_Matching import helpers
 
 
 class TestProfilePValue(unittest.TestCase):
