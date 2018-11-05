@@ -149,7 +149,9 @@ def position_specificity(num_shuffle, all_profiles):
 
 
 def main():
-    parser = ArgumentParser()
+    parser = ArgumentParser(epilog='currently input data defaults to be those in folder src/HIV/Profile_Matching/data/'
+                                   'static/ Due to the relative small amount of ouputs, they are printed to screen '
+                                   'rather than written to files.')
     parser.add_argument('-t', dest='type', type=str, required=True,
                         help='type of computation to carry out. Either position (for position specificity) or clade ('
                              'for clade spcificity)')
