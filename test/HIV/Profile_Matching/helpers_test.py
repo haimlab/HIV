@@ -1,5 +1,5 @@
 import unittest
-from constants import AMINOACIDS
+from src.HIV.constants import AMINOACIDS
 import helpers
 
 

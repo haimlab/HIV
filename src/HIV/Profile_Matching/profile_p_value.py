@@ -1,7 +1,7 @@
 from file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
-from constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
+from src.HIV.constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
 from argparse import ArgumentParser
 from copy import deepcopy
 

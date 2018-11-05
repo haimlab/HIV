@@ -1,6 +1,5 @@
 import unittest
 import file_parse
-import constants
 import profile_p_value
 
 

@@ -1,7 +1,7 @@
 import unittest
 
 import file_parse
-import constants
+from src.HIV import constants
 from os.path import join
 from math import log10
 from copy import deepcopy

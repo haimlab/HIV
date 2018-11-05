@@ -1,7 +1,7 @@
 import csv
 import random
 from copy import deepcopy
-from constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
+from src.HIV.constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
 

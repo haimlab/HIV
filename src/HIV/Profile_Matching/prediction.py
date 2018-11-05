@@ -1,6 +1,6 @@
 from file_parse import get_all_dynamic_profiles, get_all_contemporary_prediction_profiles
 from weighted_fit import calcFit
-from constants import AminoAcid, Clade, Region
+from src.HIV.constants import AminoAcid, Clade, Region
 import argparse
 from os.path import join
 from csv import writer

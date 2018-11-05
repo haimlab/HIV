@@ -9,7 +9,7 @@ STEP 5: Calculate ratio as (#random p6 profiles (centroids) from STEP 1 for whos
 STEP 6: Repeat the above for all other non-overlapping sets of <group_size> envelopes.
 """
 
-from constants import AMINOACIDS
+from src.HIV.constants import AMINOACIDS
 from csv import reader, writer
 from random import sample
 from helpers import envelopes_to_profile, euc_dist

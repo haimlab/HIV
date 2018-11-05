@@ -1,5 +1,5 @@
 from math import log10
-from constants import AMINOACIDS
+from src.HIV.constants import AMINOACIDS
 LOG_ZERO_DEFAULT = 0.1
 
 # compute profile from all given envelopes
