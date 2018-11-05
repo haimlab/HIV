@@ -22,7 +22,7 @@ def parse_cmdln_args():
 
 
 def parse_range(r):
-    return [(int(i.split(',')[0]), int(i.split(',')[1])) for i in r.split(' ')]
+    return [range(int(i.split(',')[0]), int(i.split(',')[1]) + 1) for i in r.split(' ')]
 
 
 def setup(fn, year_ranges, pos_ranges):
@@ -34,25 +34,25 @@ def setup(fn, year_ranges, pos_ranges):
         first_row = next(r)
         for i in range(POS_START_IND, len(first_row)):
             pos = int(first_row[i])
-            if any(list(map(lambda x: x[0] <= pos <= x[1], pos_ranges))):  # TODO rewrite with __contains__
+            if any(list(map(lambda x: pos in x, pos_ranges))):
                 ind2pos[i] = pos
                 aa_counts[pos] = {aa: {r: 0 for r in year_ranges} for aa in AMINOACIDS}
 
         for row in r:
             year = int(row[YEAR_IND])
             for year_range in year_ranges:
-                if year_range[0] <= year <= year_range[1]:
+                if year in year_range:
                     for i in ind2pos:
                         if row[i] == '-':
                             continue
                         aa_counts[ind2pos[i]][row[i]][year_range] += 1
                     sums[year_range] += 1
 
-    return ind2pos, aa_counts, sums
+    return aa_counts, sums
 
 
 def write_results(ofn, aa_counts, year_ranges, sums):
-    header = [''] + [f'{a}-{b}' for a, b in year_ranges]
+    header = [''] + [f'{r.start}-{r.stop - 1}' for r in year_ranges]
     for pos in aa_counts:  # each position will get a separate file
         fn = join(dirname(ofn), str(pos) + '_' + basename(ofn))
         with open(fn, 'w') as f:
@@ -69,7 +69,7 @@ def main():
     cmd_args = parse_cmdln_args()
     year_ranges = parse_range(cmd_args.year_ranges)
     pos_ranges = parse_range(cmd_args.position_ranges)
-    ind2pos, aa_counts, sums = setup(cmd_args.in_file_name, year_ranges, pos_ranges)
+    aa_counts, sums = setup(cmd_args.in_file_name, year_ranges, pos_ranges)
     write_results(cmd_args.out_file_name, aa_counts, year_ranges, sums)
 
 
