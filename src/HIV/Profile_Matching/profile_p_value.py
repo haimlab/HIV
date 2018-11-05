@@ -150,10 +150,16 @@ def position_specificity(num_shuffle, all_profiles):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-t', dest='type', type=str, required=True)
-    parser.add_argument('-n', dest='num_shuffle', type=int, required=True)
-    parser.add_argument('-e', dest='epitope', type=str, required=True)
-    parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True)
+    parser.add_argument('-t', dest='type', type=str, required=True,
+                        help='type of computation to carry out. Either position (for position specificity) or clade ('
+                             'for clade spcificity)')
+    parser.add_argument('-n', dest='num_shuffle', type=int, required=True,
+                        help='number times to shuffle profile labels')
+    parser.add_argument('-e', dest='epitope', type=str, required=True,
+                        help='epitope positions to be included in the calculations, either 2g12, 2f5, or pngs')
+    parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True,
+                        help='clade and region combinations to be included in the calculations, in the format of '
+                             'clade_1,region_1 clade_2,region_2, ...')
     cmd_args = parser.parse_args()
 
     if cmd_args.epitope == '2g12':
