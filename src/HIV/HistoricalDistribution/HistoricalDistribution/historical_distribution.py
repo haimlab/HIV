@@ -48,8 +48,6 @@ def setup(fn, year_ranges, pos_ranges):
                         aa_counts[ind2pos[i]][row[i]][year_range] += 1
                     sums[year_range] += 1
 
-    print(sums)
-    print(ind2pos)
     return ind2pos, aa_counts, sums
 
 
@@ -63,7 +61,6 @@ def write_results(ofn, aa_counts, year_ranges, sums):
             for aa in aa_counts[pos]:
                 row = [aa]
                 for year_range in year_ranges:
-                    print(f'{aa} {pos}: {aa_counts[pos][aa][year_range]}')
                     row.append(str(aa_counts[pos][aa][year_range] / sums[year_range] * 100))
                 w.writerow(row)
 
