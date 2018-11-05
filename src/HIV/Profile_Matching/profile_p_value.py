@@ -1,11 +1,26 @@
-from file_parse import get_all_static_profiles, AllStaticProfiles
+"""
+This file has code for calculating clade and position specificity.
+
+Clade Specificity Steps:
+1. Cent = Location of position centroid (calculated using all regions in all clades for that position).
+2. D(Cent , Reg&Clade) = distance between profile of the centroid of each position and the profile of each region&clade.
+3. D(Cent , Cent): Distance between the centroids of all positions.
+4. R = [Average D(Cent , Reg&Clade)] DIVIDED BY Average_D(cent, cent)
+5. Shuffle the position numbers for all region/clade profiles and calculate the above again.
+6. The p value is the number of times (out of 10,000 repeats) that the ratio R of a given position is smaller for the
+   shuffled than for the results of the test using the correctly-labeled data.
+
+Posiitonal Specificity Steps:
+Similar to those of clade specificity, but position labels are shuffled, and subgroups are grouped by positions.
+"""
+
+from src.HIV.Profile_Matching.file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
 from src.HIV.constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
 from argparse import ArgumentParser
 from copy import deepcopy
-
-from helpers import euc_dist
+from src.HIV.Profile_Matching.helpers import euc_dist
 
 
 def calc_all_centroids(all_profiles, prop_type):
