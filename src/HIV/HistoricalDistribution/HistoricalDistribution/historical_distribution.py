@@ -52,7 +52,7 @@ def setup(fn, year_ranges, pos_ranges):
 
 
 def write_results(ofn, aa_counts, year_ranges, sums):
-    header = [''] + [f'{str(a)} str{b}' for a, b in year_ranges]
+    header = [''] + [f'{a}-{b}' for a, b in year_ranges]
     for pos in aa_counts:  # each position will get a separate file
         fn = join(dirname(ofn), str(pos) + '_' + basename(ofn))
         with open(fn, 'w') as f:
