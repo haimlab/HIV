@@ -1,12 +1,9 @@
 from argparse import ArgumentParser
 from csv import reader, writer
 from os.path import dirname, basename, join
+from src.HIV.constants import AMINOACIDS
 
 
-AMINOACIDS = ('Z', 'N', 'T', 'S', 'D', 'E',
-              'K', 'R', 'H', 'Y', 'Q', 'I',
-              'L', 'V', 'A', 'C', 'F', 'G',
-              'M', 'P', 'W')
 POS_START_IND = 4  # amino acid data starts at column 4
 YEAR_IND = 1  # index of column holding year
 
