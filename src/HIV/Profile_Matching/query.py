@@ -1,8 +1,9 @@
 import argparse
 import sys
 import csv
-import constants
-from file_parse import get_all_dynamic_profiles, calcYear
+from src.HIV import constants
+from file_parse import get_all_dynamic_profiles
+from helpers import calc_year
 from weighted_fit import calcFit
 from os.path import join
 from math import log10
@@ -33,7 +34,7 @@ class Query:
             for p in sub_profiles.get_all_profiles():
                 self.add_result(p.clade(), p.region(), aminoAcid,
                                 p.fit.calcYear(query_input.profile[aminoAcid],
-                                calcYear(self.input.year_range)), p.fit)
+                                               calc_year(self.input.year_range)), p.fit)
         self.calc_best_match()
         self.find_best_match()
 
@@ -199,7 +200,7 @@ class Query:
             all_rows.append([])
 
         # write all other profiles that shared the same period with query
-        period = calcYear(self.input.year_range)
+        period = calc_year(self.input.year_range)
         all_other_profiles = {}  # {(clade, region) -> {AminoAcid -> percentage}}
         all_profiles = get_all_dynamic_profiles()
         all_profiles = all_profiles.filter(position=self.input.position)

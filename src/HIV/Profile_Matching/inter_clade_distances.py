@@ -1,7 +1,6 @@
 from csv import reader
-from convergence_p_value import envelopes_to_profile
-from profile_p_value import euc_dist
-from constants import POS_2G12, AminoAcid
+from helpers import envelopes_to_profile, euc_dist
+from src.HIV.constants import POS_2G12, AminoAcid
 from os.path import join, basename
 from random import sample
 from scipy.cluster.vq import kmeans

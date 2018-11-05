@@ -1,70 +1,62 @@
-from file_parse import get_all_static_profiles, AllStaticProfiles
+"""
+This file has code for calculating clade and position specificity.
+
+Clade Specificity Steps:
+1. Cent = Location of position centroid (calculated using all regions in all clades for that position).
+2. D(Cent , Reg&Clade) = distance between profile of the centroid of each position and the profile of each region&clade.
+3. D(Cent , Cent): Distance between the centroids of all positions.
+4. R = [Average D(Cent , Reg&Clade)] DIVIDED BY Average_D(cent, cent)
+5. Shuffle the position numbers for all region/clade profiles and calculate the above again.
+6. The p value is the number of times (out of 10,000 repeats) that the ratio R of a given position is smaller for the
+   shuffled than for the results of the test using the correctly-labeled data.
+
+Posiitonal Specificity Steps:
+Similar to those of clade specificity, but position labels are shuffled, and subgroups are grouped by positions.
+"""
+
+from src.HIV.Profile_Matching.file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
-import constants
-from constants import FilterProperties
+from src.HIV.constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
 from argparse import ArgumentParser
 from copy import deepcopy
+from src.HIV.Profile_Matching.helpers import euc_dist
 
 
 def calc_all_centroids(all_profiles, prop_type):
     centroids = {}
-    props = all_profiles.attr_list(prop_type)
-    for p in props:
+    for p in all_profiles.attr_list(prop_type):
         sub = all_profiles.filter(p)
         centroid = calc_centroid(sub)
         centroids[p] = centroid
     return centroids  # {prop_type - {amino acid -> percentage}
 
 
-# calculate centroid using mean of each dimension
-# delegates to kmeans to scipy
+# calculate centroid by using only 1 centroid for k-means clustering
 # output type: {clade: {amino_acid: mean percentage}}
 def calc_centroid(all_profiles):
-
-    # format input for scipy
-    vectors = []
-    dims = None
-    for prof in all_profiles.get_all_profiles():
-        cur_dim = prof.dim()
-        if dims is None:
-            dims = cur_dim
-        if cur_dim != dims:  # different amino acid in profiles
-            raise Exception('profiles contain different amino acids')
-        vectors.append([prof.get_distr(aa) for aa in dims])
-
-    # compute centroid using scipy
-    centroid, _ = kmeans(asarray(vectors), 1)
+    centroid, _ = kmeans(asarray([[prof.distr[aa] for aa in AMINOACIDS] for prof in all_profiles.profiles]), 1)
 
     # format output
     centroid = centroid[0]
     centroid_dict = {}
     index = 0
-    for aa in dims:
+    for aa in AMINOACIDS:
         centroid_dict[aa] = centroid[index]
         index += 1
     return centroid_dict
 
 
-# calculate euclidean distance
-def euc_dist(p1, p2):
-    if p1.keys() != p2.keys():
-        raise Exception('dimension mismatch')
-    p1 = [p1[key] for key in p1.keys()]
-    p2 = [p2[key] for key in p2.keys()]
-    return (sum([(a - b) ** 2 for a, b in zip(p1, p2)])) ** .5
-
-
 def clade_specificity_one_round(profs):
 
     # compute distance within
-    centroids = calc_all_centroids(profs, FilterProperties.CLADE)
+    centroids = calc_all_centroids(profs, 'clade')
     distances = []
     for prop in centroids:
         sub_profiles = profs.filter(prop)
         c = centroids[prop]
-        for p in sub_profiles.get_all_profiles():
-            distances.append(euc_dist(c, p.get_entire_distr()))
+        for p in sub_profiles.profiles:
+            distances.append(euc_dist(c, p.distr))
     dist_within = sum(distances) / len(distances)
 
     # compute distance without
@@ -80,14 +72,14 @@ def clade_specificity_one_round(profs):
 
 def clade_specificity(num_shuffle, all_profiles, positions):
     for pos in positions:
-        sub = all_profiles.filter(pos)
+        sub = deepcopy(all_profiles.filter(pos))
         std_rat = clade_specificity_one_round(sub)
         num_above = 0
         num_below = 0
         num_equal = 0
         for i in range(0, num_shuffle):
-            shuffled_prof = sub.shuffle(FilterProperties.CLADE)
-            r = clade_specificity_one_round(shuffled_prof)
+            sub.shuffle('clade')
+            r = clade_specificity_one_round(sub)
             if r > std_rat:
                 num_above += 1
             elif r < std_rat:
@@ -99,22 +91,19 @@ def clade_specificity(num_shuffle, all_profiles, positions):
 
 
 def select_sub_group(raw, clade_region_pairs, positions):
-    pairs = []
-    for p in clade_region_pairs:
-        [c, r] = p.split(',')
-        pairs.append((constants.Clade(c), constants.Region(r)))
+    pairs = [i for i in (p.split(',') for p in clade_region_pairs)]
     filters = []
     for p in positions:
-        filters += [(p, c, r) for c, r in pairs]
+        filters += [(p, c, r) for [c, r] in pairs]
     all_prof = AllStaticProfiles()
     for f in filters:
-        sub = raw.filter(*f).get_all_profiles()
+        sub = raw.filter(*f).profiles
         for s in sub:
-            if s.clade() == constants.Clade.C and s.position() == 295:
+            if s.clade == 'C' and s.position == 295:
                 continue
-            if s.clade() == constants.Clade.AE and (s.position() == 332 or s.position() == 339):
+            if s.clade == 'AE' and (s.position == 332 or s.position == 339):
                 continue
-            all_prof.add_profile(s)
+            all_prof.profiles.append(s)
     return all_prof
 
 
@@ -122,22 +111,22 @@ def select_sub_group(raw, clade_region_pairs, positions):
 def position_specificity_one_round(all_profiles, cur_prop_val):
 
     # calculate distance without (distance relative to other sub groups)
-    all_centroids = calc_all_centroids(all_profiles, FilterProperties.POSITION)
+    all_centroids = calc_all_centroids(all_profiles, 'position')
     cur_centroid = all_centroids[cur_prop_val]
     del all_centroids[cur_prop_val]
     dist_without = sum([euc_dist(cur_centroid, all_centroids[c]) for c in all_centroids]) / len(all_centroids)
 
     # calculate distance within
     sub_profiles = all_profiles.filter(cur_prop_val)
-    total = sum([euc_dist(cur_centroid, p.get_entire_distr()) for p in sub_profiles.get_all_profiles()])
-    dist_within = total / len(sub_profiles.get_all_profiles())
+    total = sum([euc_dist(cur_centroid, p.distr) for p in sub_profiles.profiles])
+    dist_within = total / len(sub_profiles.profiles)
 
     return dist_within / dist_without
 
 
 def position_specificity(num_shuffle, all_profiles):
 
-    positions = all_profiles.attr_list(FilterProperties.POSITION)
+    positions = all_profiles.attr_list('position')
     shuffle_copy = deepcopy(all_profiles)
 
     for p in positions:
@@ -145,7 +134,7 @@ def position_specificity(num_shuffle, all_profiles):
         num_above = 0
         num_below = 0
         for i in range(0, num_shuffle):
-            shuffle_copy.shuffle(FilterProperties.POSITION)
+            shuffle_copy.shuffle('position')
             shuffled_rat = position_specificity_one_round(shuffle_copy, p)
             if shuffled_rat > std_rat:
                 num_above += 1
@@ -160,19 +149,27 @@ def position_specificity(num_shuffle, all_profiles):
 
 
 def main():
-    parser = ArgumentParser()
-    parser.add_argument('-t', dest='type', type=str, required=True)
-    parser.add_argument('-n', dest='num_shuffle', type=int, required=True)
-    parser.add_argument('-e', dest='epitope', type=str, required=True)
-    parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True)
+    parser = ArgumentParser(epilog='currently input data defaults to be those in folder src/HIV/Profile_Matching/data/'
+                                   'static/ Due to the relative small amount of ouputs, they are printed to screen '
+                                   'rather than written to files.')
+    parser.add_argument('-t', dest='type', type=str, required=True,
+                        help='type of computation to carry out. Either position (for position specificity) or clade ('
+                             'for clade spcificity)')
+    parser.add_argument('-n', dest='num_shuffle', type=int, required=True,
+                        help='number times to shuffle profile labels')
+    parser.add_argument('-e', dest='epitope', type=str, required=True,
+                        help='epitope positions to be included in the calculations, either 2g12, 2f5, or pngs')
+    parser.add_argument('-p', nargs='+', dest='clade_region_pairs', required=True,
+                        help='clade and region combinations to be included in the calculations, in the format of '
+                             'clade_1,region_1 clade_2,region_2, ...')
     cmd_args = parser.parse_args()
 
     if cmd_args.epitope == '2g12':
-        positions = constants.POS_2G12
+        positions = POS_2G12
     elif cmd_args.epitope == '2f5':
-        positions = constants.POS_2F5
+        positions = POS_2F5
     elif cmd_args.epitope == 'pngs':
-        positions = constants.PNGS
+        positions = POS_PNGS
     else:
         raise Exception('invalid epitope type')
 
@@ -183,6 +180,7 @@ def main():
         clade_specificity(cmd_args.num_shuffle, all_prof, positions)
     elif cmd_args.type == 'position':
         position_specificity(cmd_args.num_shuffle, all_prof)
+        print(positions)
     else:
         raise Exception('invalid')
 
