@@ -31,8 +31,8 @@ def setup(fn, year_ranges, pos_ranges):
     sums = {y: 0 for y in year_ranges}
     with open(fn, 'r') as f:
         r = reader(f)
-        first_row = next(r)[POS_START_IND:]
-        for i in range(0, len(first_row)):
+        first_row = next(r)
+        for i in range(POS_START_IND, len(first_row)):
             pos = int(first_row[i])
             if any(list(map(lambda x: x[0] <= pos <= x[1], pos_ranges))):  # TODO rewrite with __contains__
                 ind2pos[i] = pos
@@ -48,6 +48,8 @@ def setup(fn, year_ranges, pos_ranges):
                         aa_counts[ind2pos[i]][row[i]][year_range] += 1
                     sums[year_range] += 1
 
+    print(sums)
+    print(ind2pos)
     return ind2pos, aa_counts, sums
 
 
@@ -61,7 +63,8 @@ def write_results(ofn, aa_counts, year_ranges, sums):
             for aa in aa_counts[pos]:
                 row = [aa]
                 for year_range in year_ranges:
-                    row.append(str(aa_counts[pos][aa][year_range] / sums[year_range]))
+                    print(f'{aa} {pos}: {aa_counts[pos][aa][year_range]}')
+                    row.append(str(aa_counts[pos][aa][year_range] / sums[year_range] * 100))
                 w.writerow(row)
 
 
