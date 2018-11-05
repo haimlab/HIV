@@ -9,12 +9,20 @@ YEAR_IND = 1  # index of column holding year
 
 
 def parse_cmdln_args():
-    # set up cmdln arguments
     parser = ArgumentParser()
-    parser.add_argument('-f', dest='in_file_name', type=str, required=True)
-    parser.add_argument('-y', dest='year_ranges', type=str, required=True)  # assume may overlap, (y1,y2 y3,y4 ...)
-    parser.add_argument('-p', dest='position_ranges', type=str, required=True)  # assume to not overlap
-    parser.add_argument('-o', dest='out_file_name', type=str, required=True)
+    parser.add_argument('-f', dest='in_file_name', type=str, required=True,
+                        help='name of the input csv file. it should be a table with columns Country, Year, Patient, '
+                             'Acession, position 1, position 2, ...')
+    parser.add_argument('-y', dest='year_ranges', type=str, required=True,
+                        help='year ranges to group results. it should be plain text with the format '
+                             'range_1_start,range_1_end range_2_start,range_2_end ... end must be less than start, and '
+                             'it is ok for the ranges to overlap')
+    parser.add_argument('-p', dest='position_ranges', type=str, required=True,
+                        help='positions to calculate the distribution for, in the same format as -y option, each '
+                             'position will get a separate output file. These ranges should not overlap')
+    parser.add_argument('-o', dest='out_file_name', type=str, required=True,
+                        help='absolute path to output file. If "foo/bar/file.csv" is given, output file names will '
+                             'look like foo/bar/position_1_file.csv, foo/bar/position_2_file.csv and so on')
     return parser.parse_args()
 
 
