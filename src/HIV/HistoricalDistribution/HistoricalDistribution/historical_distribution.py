@@ -3,6 +3,8 @@ Author: Rentian Dong
 
 This script computes the distribution of amino acid profiles
 """
+
+
 from argparse import ArgumentParser
 from csv import reader, writer
 from os.path import dirname, basename, join
