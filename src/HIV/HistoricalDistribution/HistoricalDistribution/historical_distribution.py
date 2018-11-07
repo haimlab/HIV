@@ -109,10 +109,21 @@ def __calc_distribution(file_name, year_ranges, ind2pos):
 
 
 def __gen_out_file_name(pos, out_file_name):
+    """
+    construct an output file name
+    :param pos: position associated with the distribution
+    :param out_file_name: absolute path to output file name, used as a template.
+    :return: the constructed file name
+    """
     return join(dirname(out_file_name), str(pos) + '_' + basename(out_file_name))
 
 
 def __build_header(aa_counts):
+    """
+    construct a header row to be written to output csv using the given distribution data
+    :param aa_counts: distribution data returned from __calc_distribution
+    :return: a list that looks like ['', 'year1-year2', 'year3-year4', ...]
+    """
     year_ranges = next(iter(next(iter(aa_counts.values())).values())).keys()
     return [''] + [f'{r.start}-{r.stop - 1}' for r in year_ranges]
 
