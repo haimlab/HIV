@@ -1,10 +1,26 @@
+"""
+Author: Rentian Dong
+
+Helper methods for computing clade and positional specificity
+"""
+
 from math import log10
 from src.HIV.constants import AMINOACIDS
+
+
 LOG_ZERO_DEFAULT = 0.1
+
 
 # compute profile from all given envelopes
 # i -> column index of Amino Acids to be counted
 def envelopes_to_profile(envs, i, log=True):
+    """
+
+    :param envs:
+    :param i:
+    :param log:
+    :return:
+    """
     count = {aa: 0 for aa in AMINOACIDS}
     for e in envs:
         count[e[i]] += 1

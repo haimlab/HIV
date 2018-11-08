@@ -5,6 +5,7 @@ from os.path import join, basename
 from os import listdir
 from src.HIV.Profile_Matching.helpers import log_convert
 
+
 AMINO_ACID = 0
 PERCENTAGE = 1
 DYNAMIC_DATA_FOLDER_NAME = join('data', 'dynamic')
@@ -30,9 +31,16 @@ class AllProfiles:
 
     # filter the profiles according to given criteria
     # returns a result also as AllProfiles instance, so chained filtering can be applied
-    def filter(self, *args):
+    def filter(self, *attributes):
+        """
+        return all profiles whose attributse are contained in attributes
+        :param attributes: a list of attributes to filter by
+        :return: an AllProfile instance with the filtered profiles
+        """
+
         # verify if filter arguments are valid
-        invalid_args = list(filter(lambda x: x not in CLADES + REGIONS + POS_ALL + AMINOACIDS, args))
+        valid_args = CLADES + REGIONS + POS_ALL + AMINOACIDS
+        invalid_args = list(filter(lambda x: x not in valid_args, attributes))
         if len(invalid_args) > 0:
             invalid_args = list(map(str, invalid_args))
             raise Exception('invalid filters:\n' + '\n'.join(invalid_args))
@@ -42,22 +50,37 @@ class AllProfiles:
             val_set = {p.clade, p.region, p.position}
             if hasattr(p, 'amino_acid'):
                 val_set.add(p.amino_acid)
-            if all([arg in val_set for arg in args]):
+            if all([arg in val_set for arg in attributes]):
                 filtered.profiles.append(p)
         return filtered
 
     def get_only_profile(self):
+        """
+        :return: the only profile in the AllProfiles Instance, or raise an Exception if there exists more than one
+        profiles.
+        """
         if len(self.profiles) != 1:
             raise Exception('cannot find single profile')
         else:
             return self.profiles[0]
 
     def attr_list(self, prop_type):
+        """
+        return a list of all properties of prop_type that exists in this AllProfiles instance
+        :param prop_type: the type of property to collect, could be 'clade', 'position', 'region', 'aminoacid'
+        :return: a list of properties
+        """
         return list({getattr(p, prop_type) for p in self.profiles})
 
     def shuffle(self, prop_type):
-        # so that we don't shuffle things back to previous orders when
-        # we do two multiple shuffles in a row
+        """
+        collects all properties of prop_type with duplication, and then assign them randomly to each profile. The
+        frequency of any property value is kept constant.
+        :param prop_type: type of property to shuffle, this can be 'amino acid', 'region', 'clade', or 'position'
+        :return: None, shuffling is done in place
+        """
+
+        # re-seed so that we don't shuffle things back to previous orders when we do two multiple shuffles in a row
         random.seed()
         profs = self.profiles
         for i in range(len(profs) - 1):
