@@ -1,11 +1,11 @@
 import unittest
 
-from src.HIV.Profile_Matching import file_parse
-from src.HIV import constants
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity import file_parse
+from Code_Han_et_al_2020_mBio.HIV_FD_Project import constants
 from os.path import join
 from math import log10
 from copy import deepcopy
-from src.HIV.Profile_Matching import helpers
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity import helpers
 
 
 class TestFileParse(unittest.TestCase):

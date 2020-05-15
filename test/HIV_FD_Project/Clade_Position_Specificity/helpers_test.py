@@ -1,6 +1,6 @@
 import unittest
-from src.HIV.constants import AMINOACIDS
-from src.HIV.Profile_Matching import helpers
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.constants import AMINOACIDS
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity import helpers
 
 
 class TestProfilePValue(unittest.TestCase):
