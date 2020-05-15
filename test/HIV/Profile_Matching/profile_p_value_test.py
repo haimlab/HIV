@@ -1,5 +1,5 @@
 import unittest
-from src.HIV.Profile_Matching import file_parse, specificity
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity import file_parse, clade_position_specificity
 
 
 class TestProfilePValue(unittest.TestCase):
@@ -7,7 +7,7 @@ class TestProfilePValue(unittest.TestCase):
     def test_select_sub_group(self):
 
         all_prof = file_parse.get_all_static_profiles()
-        sub_prof = specificity.select_sub_group(all_prof, ['B,NA', 'C,EU', 'AE,TH'], [295, 667])
+        sub_prof = clade_position_specificity.select_sub_group(all_prof, ['B,NA', 'C,EU', 'AE,TH'], [295, 667])
         for p in sub_prof.profiles:
             self.assertTrue(p.position == 295 or p.position == 667)
         for p in sub_prof.profiles:
@@ -20,7 +20,7 @@ class TestProfilePValue(unittest.TestCase):
     def test_select_sub_group_exclusions(self):
 
         all_prof = file_parse.get_all_static_profiles()
-        sub_prof = specificity.select_sub_group(all_prof, ['C,EU', 'AE,TH'], [295, 332, 392])
+        sub_prof = clade_position_specificity.select_sub_group(all_prof, ['C,EU', 'AE,TH'], [295, 332, 392])
         num_c = 0
         num_ae = 0
         for p in sub_prof.profiles:

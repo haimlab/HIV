@@ -5,7 +5,7 @@ Helper methods for computing clade and positional specificity
 """
 
 from math import log10
-from src.HIV.constants import AMINOACIDS
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.constants import AMINOACIDS
 
 
 LOG_ZERO_DEFAULT = 0.1

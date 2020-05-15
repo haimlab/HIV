@@ -14,13 +14,13 @@ Posiitonal Specificity Steps:
 Similar to those of clade specificity, but position labels are shuffled, and subgroups are grouped by positions.
 """
 
-from src.HIV.Profile_Matching.file_parse import get_all_static_profiles, AllStaticProfiles
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity.file_parse import get_all_static_profiles, AllStaticProfiles
 from numpy import asarray
 from scipy.cluster.vq import kmeans
-from src.HIV.constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.constants import AMINOACIDS, POS_PNGS, POS_2F5, POS_2G12
 from argparse import ArgumentParser
 from copy import deepcopy
-from src.HIV.Profile_Matching.helpers import euc_dist
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity.helpers import euc_dist
 
 
 def calc_all_centroids(all_profiles, prop_type):
@@ -149,7 +149,7 @@ def position_specificity(num_shuffle, all_profiles):
 
 
 def main():
-    parser = ArgumentParser(epilog='currently input data defaults to be those in folder src/HIV/Profile_Matching/data/'
+    parser = ArgumentParser(epilog='currently input data defaults to be those in folder Code_Han_et_al_2020_mBio/HIV_FD_Project/Clade_Position_Specificity/data/'
                                    'static/ Due to the relative small amount of ouputs, they are printed to screen '
                                    'rather than written to files.')
     parser.add_argument('-t', dest='type', type=str, required=True,

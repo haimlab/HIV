@@ -1,14 +1,7 @@
-"""
-Author: Rentian Dong
-
-This script computes the distribution of amino acid profiles
-"""
-
-
 from argparse import ArgumentParser
 from csv import reader, writer
 from os.path import dirname, basename, join
-from src.HIV.constants import AMINOACIDS
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.constants import AMINOACIDS
 
 
 POS_START_IND = 1  # amino acid data starts at column 1

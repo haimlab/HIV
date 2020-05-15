@@ -1,9 +1,9 @@
 import csv
 import random
-from src.HIV.constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.constants import CLADES, REGIONS, AMINOACIDS, POS_ALL
 from os.path import join, basename
 from os import listdir
-from src.HIV.Profile_Matching.helpers import log_convert
+from Code_Han_et_al_2020_mBio.HIV_FD_Project.Clade_Position_Specificity.helpers import log_convert
 
 
 AMINO_ACID = 0
